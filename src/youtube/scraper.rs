@@ -1,9 +1,15 @@
 use reqwest;
-use rss::Channel;
+use rss;
 
 pub struct RssFetcher {
     pub url: String,
 }
+
+pub struct VideoInfo {
+    pub title: String,
+    pub link: String,
+}
+
 
 impl RssFetcher {
 
@@ -13,9 +19,18 @@ impl RssFetcher {
         }
     }
 
-    pub async fn fetch(&self) -> Result<Channel, Box<dyn std::error::Error>> {
+    pub async fn fetch(&self) -> Result<Vec<VideoInfo>, Box<dyn std::error::Error>> {
         let content = reqwest::get(&self.url).await?.text().await?;
-        let channel = content.parse::<Channel>()?;
-        Ok(channel)
+        let channel = content.parse::<rss::Channel>()?;
+
+        let videos = channel.items().iter().map(|item| {
+            VideoInfo {
+                title: item.title().unwrap_or_default().to_string(),
+                link: item.link().unwrap_or_default().to_string(),
+            }
+        }).collect();
+
+        Ok(videos)
     }
+
 }
