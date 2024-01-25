@@ -30,6 +30,7 @@ async fn main() {
                 }
 
                 if db_conn.channel_exists(&video.author_name) == false {
+                    // Create a new user
                     let my_keys: Keys = Keys::generate();
                     let pk: String = match my_keys.public_key().to_bech32() {
                         Ok(pk) => pk,
@@ -42,29 +43,41 @@ async fn main() {
                     let prk: String = match my_keys.secret_key() {
                         Ok(secret_key) => secret_key.to_bech32().unwrap_or_else(|_| {
                             eprintln!("Failed to convert secret key to Bech32 format.");
-                            String::new() // or any default String value
+                            String::new() 
                         }),
                         Err(e) => {
                             eprintln!("Failed to get secret key: {}", e);
-                            String::new() // or any default String value
+                            String::new() 
                         }
                     };
                     
-                    db_conn.add_user(video.author_name.clone(), pk, prk, channel_id.clone());
+                    if let Err(e) = db_conn.add_user(video.author_name.clone(), pk, prk, channel_id.clone()) {
+                        eprintln!("Failed to add user: {}", e);
+                    }                
                 }
+                
                 let user_private_key_result = db_conn.find_user_private_key(&channel_id);
-                let user_private_key_str = user_private_key_result.unwrap();
+                let user_private_key_str: String = match user_private_key_result {
+                    Some(key) => key,
+                    None => {
+                        eprintln!("Failed to get user private key");
+                        return;
+                    }
+                };
 
-
-                let userKey: Keys = match Keys::from_sk_str(&user_private_key_str) {
+                let user_key: Keys = match Keys::from_sk_str(&user_private_key_str) {
                     Ok(keys) => keys,
                     Err(e) => {
                         eprintln!("Failed to create Keys from private key: {}", e);
                         continue;
                     }
                 };
-                db_conn.add_video(video.author_name.clone(),channel_id.clone(), video.title.clone(), video.link.clone(), false);
-                let _ = publish::publish_text_note(userKey,&video.author_name.clone(), &format!("{}{}", &video.title, &video.link)).await;
+
+                if let Err(e) = db_conn.add_video(video.author_name.clone(),channel_id.clone(), video.title.clone(), video.link.clone(), false) {
+                    eprintln!("Failed to add video: {}", e);
+                }
+
+                let _ = publish::publish_text_note(user_key,&video.author_name.clone(), &format!("{}{}", &video.title, &video.link)).await;
                 println!("Published video: {}", &video.author_name);
 
             }
