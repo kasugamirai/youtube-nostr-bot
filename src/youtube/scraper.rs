@@ -8,6 +8,7 @@ pub struct RssFetcher {
 pub struct VideoInfo {
     pub title: String,
     pub link: String,
+    pub author_name: String,
 }
 
 
@@ -27,6 +28,7 @@ impl RssFetcher {
             VideoInfo {
                 title: item.title().unwrap_or_default().to_string(),
                 link: item.link().unwrap_or_default().to_string(),
+                author_name: item.author().unwrap_or_default().to_string(),
             }
         }).collect();
 
