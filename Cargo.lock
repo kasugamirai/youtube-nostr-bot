@@ -2121,6 +2121,7 @@ dependencies = [
  "nostr_wrapper",
  "reqwest",
  "rss",
+ "serde_json",
  "tokio",
  "youtube_bd",
 ]

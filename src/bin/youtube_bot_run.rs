@@ -1,4 +1,4 @@
-use youtube_bot::youtube::scraper::RssFetcher;
+use youtube_bot::youtube::youtube_fetch::YoutubeFetcher;
 use nostr_wrapper::publish;
 use youtube_bd::{db::DbConnection, schema::youtube_users::publickey};
 use nostr_sdk::prelude::*;
@@ -8,16 +8,22 @@ use dotenv::dotenv;
 #[tokio::main]
 async fn main() {
     dotenv().ok();
-    let channel_id = match env::var("CHANNEL_ID") {
+    let user_id = match env::var("USER_ID") {
         Ok(val) => val,
         Err(_) => {
-            eprintln!("CHANNEL_ID not set");
+            eprintln!("USER_ID not set");
             return;
         }
     };
-    let url = format!("https://rsshub.app/youtube/channel/{}", channel_id);
-    println!("Channel ID: {}", channel_id);
-    let fetcher = RssFetcher::new(&url);
+    let api_key = match env::var("API_KEY") {
+        Ok(val) => val,
+        Err(_) => {
+            eprintln!("API_KEY not set");
+            return;
+        }
+    };
+    println!("User ID: {}", user_id);
+    let fetcher = YoutubeFetcher::new(&api_key, &user_id);
     let mut db_conn = DbConnection::new();
     match fetcher.fetch().await {
         Ok(videos) => {
@@ -50,12 +56,12 @@ async fn main() {
                         }
                     };
                     
-                    if let Err(e) = db_conn.add_user(video.author_name.clone(), pk, prk, channel_id.clone()) {
+                    if let Err(e) = db_conn.add_user(video.author_name.clone(), pk, prk, user_id.clone()) {
                         eprintln!("Failed to add user: {}", e);
                     }                
                 }
                 
-                let user_private_key_result = db_conn.find_user_private_key(&channel_id);
+                let user_private_key_result = db_conn.find_user_private_key(&user_id);
                 let user_private_key_str: String = match user_private_key_result {
                     Some(key) => key,
                     None => {
@@ -72,7 +78,7 @@ async fn main() {
                     }
                 };
 
-                if let Err(e) = db_conn.add_video(video.author_name.clone(),channel_id.clone(), video.title.clone(), video.link.clone(), false) {
+                if let Err(e) = db_conn.add_video(video.author_name.clone(),user_id.clone(), video.title.clone(), video.link.clone(), false) {
                     eprintln!("Failed to add video: {}", e);
                 }
 
@@ -81,6 +87,6 @@ async fn main() {
 
             }
         }
-        Err(e) => eprintln!("Failed to fetch RSS feed: {}", e),
+        Err(e) => eprintln!("Failed to fetch videos: {}", e),
     }
 }

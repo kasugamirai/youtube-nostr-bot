@@ -14,4 +14,5 @@ nostr_wrapper = { path = "./nostr_wrapper" }
 youtube_bd = { path = "./youtube_bd" }
 nostr-sdk = "0.27"
 dotenv = "0.15.0"
+serde_json = "1.0.111"
 
