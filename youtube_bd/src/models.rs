@@ -1,4 +1,6 @@
 use diesel::prelude::*;
+use serde::Deserialize;
+
 
 #[derive(Queryable, Selectable)]
 #[diesel(table_name = crate::schema::videos)]
@@ -42,4 +44,9 @@ pub struct NewYoutubeUser {
     pub publickey: String,
     pub privatekey: String,
     pub channel: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Config {
+    pub dsn: String,
 }

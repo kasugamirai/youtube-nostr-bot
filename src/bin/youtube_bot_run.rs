@@ -2,29 +2,22 @@ use youtube_bot::youtube::youtube_fetch::YoutubeFetcher;
 use nostr_wrapper::publish;
 use youtube_bd::{db::DbConnection, schema::youtube_users::publickey};
 use nostr_sdk::prelude::*;
-use std::env;
-use dotenv::dotenv;
+use std::fs::File;
+use std::io::BufReader;
+use youtube_bot::Config;
 
 #[tokio::main]
 async fn main() {
-    dotenv().ok();
-    let user_id = match env::var("USER_ID") {
-        Ok(val) => val,
-        Err(_) => {
-            eprintln!("USER_ID not set");
-            return;
-        }
-    };
-    let api_key = match env::var("API_KEY") {
-        Ok(val) => val,
-        Err(_) => {
-            eprintln!("API_KEY not set");
-            return;
-        }
-    };
-    println!("User ID: {}", user_id);
-    let fetcher = YoutubeFetcher::new(&api_key, &user_id);
+    let file = File::open("./conf/test/config.yaml").expect("Failed to open config file");
+
+    let reader = BufReader::new(file);
+
+    let config: Config = serde_yaml::from_reader(reader).expect("Failed to read config");
+
+    let fetcher = YoutubeFetcher::new(&config.api_key, &config.user_id);
+
     let mut db_conn = DbConnection::new();
+
     match fetcher.fetch().await {
         Ok(videos) => {
             for video in videos {
@@ -56,12 +49,12 @@ async fn main() {
                         }
                     };
                     
-                    if let Err(e) = db_conn.add_user(video.author_name.clone(), pk, prk, user_id.clone()) {
+                    if let Err(e) = db_conn.add_user(video.author_name.clone(), pk, prk, config.user_id.clone()) {
                         eprintln!("Failed to add user: {}", e);
                     }                
                 }
                 
-                let user_private_key_result = db_conn.find_user_private_key(&user_id);
+                let user_private_key_result = db_conn.find_user_private_key(&config.user_id);
                 let user_private_key_str: String = match user_private_key_result {
                     Some(key) => key,
                     None => {
@@ -78,7 +71,7 @@ async fn main() {
                     }
                 };
 
-                if let Err(e) = db_conn.add_video(video.author_name.clone(),user_id.clone(), video.title.clone(), video.link.clone(), false) {
+                if let Err(e) = db_conn.add_video(video.author_name.clone(),config.user_id.clone(), video.title.clone(), video.link.clone(), false) {
                     eprintln!("Failed to add video: {}", e);
                 }
 

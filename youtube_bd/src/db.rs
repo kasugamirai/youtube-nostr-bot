@@ -1,8 +1,8 @@
-use std::{env};
 use diesel::prelude::*;
-use dotenvy::dotenv;
-use crate::models::{Videos, NewVideos, YoutubeUser, NewYoutubeUser};
+use crate::models::{Videos, NewVideos, YoutubeUser, NewYoutubeUser,Config};
 use diesel::result::Error;
+use std::fs::File;
+use std::io::BufReader;
 
 
 pub struct DbConnection {
@@ -13,9 +13,10 @@ pub struct DbConnection {
 
 impl DbConnection {
     pub fn new() -> DbConnection {
-        dotenv().ok();
-        let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-        let conn = PgConnection::establish(&database_url).expect(&format!("Error connecting to {}", database_url));
+        let file = File::open("./conf/test/config.yaml").expect("Failed to open config file");
+        let reader = BufReader::new(file);
+        let config: Config = serde_yaml::from_reader(reader).expect("Failed to read config");
+        let conn = PgConnection::establish(&config.dsn).expect(&format!("Error connecting to {}", config.dsn));
 
         DbConnection {
             conn: conn,
