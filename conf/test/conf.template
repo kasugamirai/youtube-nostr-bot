@@ -1,0 +1,5 @@
+youtube:
+  user_id: youtube_user_id
+  api_key: your_youtube_api
+
+dsn: postgres://xy:postgres@localhost:5432/youtube

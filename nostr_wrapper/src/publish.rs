@@ -16,6 +16,8 @@ pub async fn publish_text_note(my_keys:Keys,username: &str, message: &str) -> Re
         "wss://nos.lol",
         "wss://offchain.pub",
         "wss://relay.snort.social",
+        "wss://bitcoiner.social",
+        "wss://relay.current.fyi",
     ];
     client.add_relays(relays).await?;
 

@@ -4,19 +4,22 @@ use serde_json::Value;
 pub struct YoutubeFetcher {
     pub api_key: String,
     pub user_id: String,
+    pub count: u32,
 }
 
 pub struct VideoInfo {
     pub title: String,
     pub link: String,
     pub author_name: String,
+    pub channel_id: String,
 }
 
 impl YoutubeFetcher {
-    pub fn new(api_key: &str, user_id: &str) -> YoutubeFetcher {
+    pub fn new(api_key: &str, user_id: &str, count: u32) -> YoutubeFetcher {
         YoutubeFetcher {
             api_key: api_key.to_string(),
             user_id: user_id.to_string(),
+            count: count,
         }
     }
 
@@ -34,7 +37,7 @@ impl YoutubeFetcher {
         };
     
         // Then, get the videos from the channel ID
-        let video_url = format!("https://www.googleapis.com/youtube/v3/search?key={}&channelId={}&part=snippet,id&order=date&maxResults=20", self.api_key, channel_id);
+        let video_url = format!("https://www.googleapis.com/youtube/v3/search?key={}&channelId={}&part=snippet,id&order=date&maxResults={}", self.api_key, channel_id, self.count);
         let video_response = reqwest::get(&video_url).await?.text().await?;
         let video_v: Value = serde_json::from_str(&video_response)?;
     
@@ -48,6 +51,7 @@ impl YoutubeFetcher {
                 title: item["snippet"]["title"].as_str().unwrap_or_default().to_string(),
                 link: format!("https://www.youtube.com/watch?v={}", item["id"]["videoId"].as_str().unwrap_or_default()),
                 author_name: item["snippet"]["channelTitle"].as_str().unwrap_or_default().to_string(),
+                channel_id: channel_id.clone(),
             }
         }).collect();
     
