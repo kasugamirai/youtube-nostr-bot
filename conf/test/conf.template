@@ -1,5 +1,10 @@
+#plz change file name to config.yaml
 youtube:
-  user_id: youtube_user_id
+  user_id:
+    - user_id1
+    - user_id2
+  count: 100
   api_key: your_youtube_api
 
 dsn: postgres://xy:postgres@localhost:5432/youtube
+
