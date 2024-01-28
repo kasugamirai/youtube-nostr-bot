@@ -1,4 +1,4 @@
-use youtube_bot::youtube::scraper::RssFetcher;
+use youtube_bot::youtube::rss_fetch::RssFetcher;
 use nostr_wrapper::publish;
 use youtube_bd::{db::DbConnection, schema::youtube_users::publickey};
 use nostr_sdk::prelude::*;
