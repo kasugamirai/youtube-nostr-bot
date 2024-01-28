@@ -23,8 +23,7 @@ impl YoutubeFetcher {
         }
     }
 
-    pub async fn fetch(&self) -> Result<Vec<VideoInfo>, Box<dyn std::error::Error>> {
-        // First, get the channel ID from the user ID
+    pub async fn get_channel_id(&self) -> Result<String, Box<dyn std::error::Error>> {
         let channel_url = format!("https://www.googleapis.com/youtube/v3/search?part=snippet&q={}&type=channel&key={}", self.user_id, self.api_key);
         let channel_response = reqwest::get(&channel_url).await?.text().await?;
         let channel_v: Value = serde_json::from_str(&channel_response)?;
@@ -35,8 +34,11 @@ impl YoutubeFetcher {
             },
             None => return Err(Box::new(std::io::Error::new(std::io::ErrorKind::Other, "No channel found"))),
         };
-    
-        // Then, get the videos from the channel ID
+        Ok(channel_id)
+    }
+
+    pub async fn fetch(&self) -> Result<Vec<VideoInfo>, Box<dyn std::error::Error>> {
+        let channel_id = self.get_channel_id().await?;
         let video_url = format!("https://www.googleapis.com/youtube/v3/search?key={}&channelId={}&part=snippet,id&order=date&maxResults={}", self.api_key, channel_id, self.count);
         let video_response = reqwest::get(&video_url).await?.text().await?;
         let video_v: Value = serde_json::from_str(&video_response)?;
