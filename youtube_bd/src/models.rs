@@ -35,6 +35,7 @@ pub struct YoutubeUser {
     pub publickey: String,
     pub privatekey: String,
     pub channel: String,
+    pub channel_id: String,
 }
 
 #[derive(Insertable)]
@@ -44,6 +45,7 @@ pub struct NewYoutubeUser {
     pub publickey: String,
     pub privatekey: String,
     pub channel: String,
+    pub channel_id: String,
 }
 
 #[derive(Debug, Deserialize)]

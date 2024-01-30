@@ -3,5 +3,6 @@ CREATE TABLE youtube_users (
     username VARCHAR NOT NULL,
     publickey VARCHAR NOT NULL,
     privatekey VARCHAR NOT NULL,
-    channel VARCHAR NOT NULL
+    channel VARCHAR NOT NULL,
+    channel_id VARCHAR NOT NULL
 )

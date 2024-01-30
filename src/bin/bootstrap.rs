@@ -50,7 +50,7 @@ async fn main() {
                         }
                     };
                     
-                    if let Err(e) = db_conn.add_user(video.author_name.clone(), pk, prk, channel_id.clone()) {
+                    if let Err(e) = db_conn.add_user(video.author_name.clone(), pk, prk, channel_id.clone(), channel_id.clone()) {
                         eprintln!("Failed to add user: {}", e);
                     }                
                 }

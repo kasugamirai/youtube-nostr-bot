@@ -19,6 +19,7 @@ diesel::table! {
         publickey -> Varchar,
         privatekey -> Varchar,
         channel -> Varchar,
+        channel_id -> Varchar,
     }
 }
 

@@ -24,6 +24,13 @@ impl DbConnection {
             youtube_users: Vec::new(),
         }
     }
+
+    pub fn query_channel_id(&mut self, ch: &str) -> Option<String> {
+        use crate::schema::youtube_users::dsl::*;
+        let results = youtube_users.filter(channel.eq(ch)).load::<YoutubeUser>(&mut self.conn).expect("Error loading users");
+        results.first().map(|user| user.channel_id.to_string())
+    }
+    
     pub fn video_exists(&mut self, lk: &str) -> bool {
         use crate::schema::videos::dsl::*;
         let results = videos.filter(link.eq(lk)).load::<Videos>(&mut self.conn).expect("Error loading videos");
@@ -36,7 +43,7 @@ impl DbConnection {
         !results.is_empty()
     }
 
-    pub fn add_user(&mut self, un: String, pk: String, prk: String, ch: String) -> Result<(), Error> {
+    pub fn add_user(&mut self, un: String, pk: String, prk: String, ch: String, chid: String) -> Result<(), Error> {
         use crate::schema::youtube_users::dsl::*;
     
         let new_user = NewYoutubeUser {
@@ -44,6 +51,7 @@ impl DbConnection {
             publickey: pk,
             privatekey: prk,
             channel: ch,
+            channel_id: chid,
         };
     
         diesel::insert_into(youtube_users)

@@ -15,11 +15,25 @@ async fn main() {
 
     let config: Config = serde_yaml::from_reader(reader).expect("Failed to read config");
 
+    let mut db_conn = DbConnection::new();
+
     for user_id in &config.youtube.user_id {
-
-        let fetcher = YoutubeFetcher::new(&config.youtube.api_key, &user_id, config.youtube.count);
-
-        let channel_id = fetcher.get_channel_id().await.unwrap();
+        let channel_id_option = db_conn.query_channel_id(user_id);
+        let mut channel_id = String::new();
+        
+        match channel_id_option {
+            Some(id) => channel_id = id,
+            None => {
+                let fetcher = YoutubeFetcher::new(&config.youtube.api_key, &user_id, config.youtube.count);
+                match fetcher.get_channel_id().await {
+                    Ok(id) => channel_id = id,
+                    Err(e) => {
+                        eprintln!("Failed to get channel ID: {}", e);
+                        continue;
+                    }
+                }
+            }
+        }
 
         let url = format!("https://rsshub.app/youtube/channel/{}", channel_id);
         println!("Channel ID: {}", channel_id);
@@ -56,7 +70,7 @@ async fn main() {
                             }
                         };
                         
-                        if let Err(e) = db_conn.add_user(video.author_name.clone(), pk, prk, user_id.clone()) {
+                        if let Err(e) = db_conn.add_user(video.author_name.clone(), pk, prk, user_id.clone(), channel_id.clone()) {
                             eprintln!("Failed to add user: {}", e);
                         }                
                     }

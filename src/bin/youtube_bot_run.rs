@@ -1,3 +1,4 @@
+use youtube_bd::schema::videos::channel;
 use youtube_bot::youtube::youtube_fetch::YoutubeFetcher;
 use nostr_wrapper::publish;
 use youtube_bd::db::DbConnection;
@@ -53,7 +54,15 @@ async fn main() {
                             }
                         };
 
-                        if let Err(e) = db_conn.add_user(video.author_name.clone(), pk, prk, user_id.clone()) {
+                        let channel_id = match fetcher.get_channel_id().await {
+                            Ok(id) => id,
+                            Err(e) => {
+                                eprintln!("Failed to get channel ID: {}", e);
+                                continue;
+                            }
+                        };
+
+                        if let Err(e) = db_conn.add_user(video.author_name.clone(), pk, prk, user_id.clone(), channel_id.clone()) {
                             eprintln!("Failed to add user: {}", e);
                         }
                     }
