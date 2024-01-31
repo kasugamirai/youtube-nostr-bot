@@ -1,3 +1,4 @@
+use youtube_bd::schema::youtube_users::avatar;
 use youtube_bot::youtube::rss_fetch::RssFetcher;
 use youtube_bot::youtube::youtube_fetch::YoutubeFetcher;
 use nostr_wrapper::publish;
@@ -24,6 +25,7 @@ async fn main() {
         match channel_id_option {
             Some(id) => channel_id = id,
             None => {
+                print!("Channel ID not found in database. Fetching..." );
                 let fetcher = YoutubeFetcher::new(&config.youtube.api_key, &user_id, config.youtube.count);
                 match fetcher.get_channel_id().await {
                     Ok(id) => channel_id = id,
@@ -34,7 +36,17 @@ async fn main() {
                 }
             }
         }
-
+        
+        let fetcher = YoutubeFetcher::new(&config.youtube.api_key, &user_id, config.youtube.count);
+        let avatar_result = fetcher.get_user_avatar().await;
+        let avatar_url = match avatar_result {
+            Ok(url) => url,
+            Err(e) => {
+                eprintln!("Failed to get user avatar: {}", e);
+                "".to_string() // Use an empty string as the avatar if fetching fails
+            }
+        };
+    
         let url = format!("https://rsshub.app/youtube/channel/{}", channel_id);
         println!("Channel ID: {}", channel_id);
         let fetcher = RssFetcher::new(&url);
@@ -70,7 +82,7 @@ async fn main() {
                             }
                         };
                         
-                        if let Err(e) = db_conn.add_user(video.author_name.clone(), pk, prk, user_id.clone(), channel_id.clone()) {
+                        if let Err(e) = db_conn.add_user(video.author_name.clone(), avatar_url.clone(), pk, prk, user_id.clone(), channel_id.clone()) {
                             eprintln!("Failed to add user: {}", e);
                         }                
                     }

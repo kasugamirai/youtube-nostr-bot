@@ -8,3 +8,29 @@ youtube:
 
 dsn: postgres://xy:postgres@localhost:5432/youtube
 
+nostr:
+  relays:
+    - wss://nostr-pub.wellorder.net
+    - wss://relayable.org
+    - wss://nos.lol
+    - wss://offchain.pub
+    - wss://relay.damus.io
+    - wss://relay.snort.social
+    - wss://freerelay.xyz
+    - wss://relay.current.fyi
+    - wss://relay.beta.fogtype.com
+    - wss://tictac.nostr1.com
+    - wss://blastr.f7z.xyz
+    - wss://relay.primal.net
+    - wss://th1.nostr.earnkrub.xyz
+    - wss://sfgbsfg431512asf124as.xyz
+    - wss://nostr.zenon.info
+    - wss://relay.wavlake.com
+    - wss://relay.noswhere.com
+    - wss://relay.mostr.pub
+    - wss://nostr.zoel.network
+    - wss://relay.nostrcn.com
+    - wss://relay.proxymana.net
+    - wss://crayon.nostr-demo.relayaas.com
+    - wss://bitcoiner.social
+

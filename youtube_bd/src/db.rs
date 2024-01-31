@@ -43,11 +43,12 @@ impl DbConnection {
         !results.is_empty()
     }
 
-    pub fn add_user(&mut self, un: String, pk: String, prk: String, ch: String, chid: String) -> Result<(), Error> {
+    pub fn add_user(&mut self, un: String, av:String, pk: String, prk: String, ch: String, chid: String) -> Result<(), Error> {
         use crate::schema::youtube_users::dsl::*;
     
         let new_user = NewYoutubeUser {
             username: un,
+            avatar: Some(av),
             publickey: pk,
             privatekey: prk,
             channel: ch,

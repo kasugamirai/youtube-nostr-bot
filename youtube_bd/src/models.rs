@@ -32,6 +32,7 @@ pub struct NewVideos {
 pub struct YoutubeUser {
     pub id: i32,
     pub username: String,
+    pub avatar: Option<String>,
     pub publickey: String,
     pub privatekey: String,
     pub channel: String,
@@ -42,6 +43,7 @@ pub struct YoutubeUser {
 #[diesel(table_name = crate::schema::youtube_users)]
 pub struct NewYoutubeUser {
     pub username: String,
+    pub avatar: Option<String>,
     pub publickey: String,
     pub privatekey: String,
     pub channel: String,

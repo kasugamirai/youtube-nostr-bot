@@ -16,6 +16,7 @@ diesel::table! {
     youtube_users (id) {
         id -> Int4,
         username -> Varchar,
+        avatar -> Nullable<Varchar>,
         publickey -> Varchar,
         privatekey -> Varchar,
         channel -> Varchar,

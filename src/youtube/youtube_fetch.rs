@@ -41,7 +41,7 @@ impl YoutubeFetcher {
         let channel_id = self.get_channel_id().await?;
         let avatar_url = format!("https://www.googleapis.com/youtube/v3/channels?part=snippet&id={}&key={}", channel_id, self.api_key);
         let avatar_response = reqwest::get(&avatar_url).await?.text().await?;
-        let avatar_v: Value = serde_json::from_str(&avatar_response)?;
+        let avatar_v: Value = sonic_rs::from_str(&avatar_response)?;
 
         let avatar_link = match avatar_v["items"].get(0) {
             Some(item) => match item["snippet"]["thumbnails"]["default"]["url"].as_str() {
@@ -57,7 +57,7 @@ impl YoutubeFetcher {
         let channel_id = self.get_channel_id().await?;
         let video_url = format!("https://www.googleapis.com/youtube/v3/search?key={}&channelId={}&part=snippet,id&order=date&maxResults={}", self.api_key, channel_id, self.count);
         let video_response = reqwest::get(&video_url).await?.text().await?;
-        let video_v: Value = serde_json::from_str(&video_response)?;
+        let video_v: Value = sonic_rs::from_str(&video_response)?;
     
         let items = match video_v["items"].as_array() {
             Some(items) => items,
