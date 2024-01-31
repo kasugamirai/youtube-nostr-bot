@@ -1,5 +1,5 @@
 use diesel::prelude::*;
-use serde::Deserialize;
+use sonic_rs::{Deserialize, Serialize}; 
 
 
 #[derive(Queryable, Selectable)]

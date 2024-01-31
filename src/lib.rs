@@ -1,5 +1,5 @@
 pub mod youtube;
-use serde::Deserialize;
+use sonic_rs::Deserialize;
 
 
 #[derive(Debug, Deserialize)]

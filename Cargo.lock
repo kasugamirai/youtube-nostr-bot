@@ -1033,6 +1033,7 @@ dependencies = [
  "nostr-sdk",
  "serde",
  "serde_yaml 0.9.31",
+ "sonic-rs",
  "tokio",
 ]
 
@@ -2252,6 +2253,7 @@ dependencies = [
  "dotenvy",
  "serde",
  "serde_yaml 0.8.26",
+ "sonic-rs",
 ]
 
 [[package]]

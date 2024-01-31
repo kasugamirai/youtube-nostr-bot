@@ -1,5 +1,5 @@
 use reqwest;
-use serde_json::Value;
+use sonic_rs::{JsonContainerTrait, JsonValueTrait, Value};
 
 pub struct YoutubeFetcher {
     pub api_key: String,
@@ -26,7 +26,7 @@ impl YoutubeFetcher {
     pub async fn get_channel_id(&self) -> Result<String, Box<dyn std::error::Error>> {
         let channel_url = format!("https://www.googleapis.com/youtube/v3/search?part=snippet&q={}&type=channel&key={}", self.user_id, self.api_key);
         let channel_response = reqwest::get(&channel_url).await?.text().await?;
-        let channel_v: Value = serde_json::from_str(&channel_response)?;
+        let channel_v: Value = sonic_rs::from_str(&channel_response)?;
         let channel_id = match channel_v["items"].get(0) {
             Some(item) => match item["snippet"]["channelId"].as_str() {
                 Some(id) => id.to_string(),
@@ -36,7 +36,7 @@ impl YoutubeFetcher {
         };
         Ok(channel_id)
     }
-
+    
     pub async fn get_user_avatar(&self) -> Result<String, Box<dyn std::error::Error>> {
         let channel_id = self.get_channel_id().await?;
         let avatar_url = format!("https://www.googleapis.com/youtube/v3/channels?part=snippet&id={}&key={}", channel_id, self.api_key);

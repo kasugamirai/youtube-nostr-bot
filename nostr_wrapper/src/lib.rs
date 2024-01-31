@@ -1,5 +1,5 @@
 pub mod publish;
-use serde::Deserialize;
+use sonic_rs::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
