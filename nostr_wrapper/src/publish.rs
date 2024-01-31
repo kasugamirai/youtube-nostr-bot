@@ -38,6 +38,10 @@ pub async fn publish_text_note(my_keys:Keys,username: &str, message: &str) -> Re
 
     // post a text note
     client.publish_text_note(message, []).await?;
-
+    // disconnect
+    match client.disconnect().await {
+        Ok(_) => (),
+        Err(e) => eprintln!("Failed to disconnect: {}", e),
+    }
     Ok(())
 }
