@@ -62,7 +62,18 @@ async fn main() {
                             }
                         };
 
-                        if let Err(e) = db_conn.add_user(video.author_name.clone(), pk, prk, user_id.clone(), channel_id.clone()) {
+                        let fetcher = YoutubeFetcher::new(&config.youtube.api_key, &user_id, config.youtube.count);
+                        let avatar_result = fetcher.get_user_avatar().await;
+                        let avatar_url = match avatar_result {
+                            Ok(url) => url,
+                            Err(e) => {
+                                eprintln!("Failed to get user avatar: {}", e);
+                                "".to_string() // Use an empty string as the avatar if fetching fails
+                            }
+                        };
+                
+
+                        if let Err(e) = db_conn.add_user(video.author_name.clone(), avatar_url, pk, prk, user_id.clone(), channel_id.clone()) {
                             eprintln!("Failed to add user: {}", e);
                         }
                     }
