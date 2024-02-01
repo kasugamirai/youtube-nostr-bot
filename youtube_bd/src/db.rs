@@ -30,7 +30,13 @@ impl DbConnection {
         let results = youtube_users.filter(channel.eq(ch)).load::<YoutubeUser>(&mut self.conn).expect("Error loading users");
         results.first().map(|user| user.channel_id.to_string())
     }
-    
+
+    pub fn avatar_exists(&mut self, ch: &str) -> Option<String> {
+        use crate::schema::youtube_users::dsl::*;
+        let results = youtube_users.filter(channel.eq(ch)).load::<YoutubeUser>(&mut self.conn).expect("Error loading users");
+        results.first().and_then(|user| user.avatar.clone())
+    }
+
     pub fn video_exists(&mut self, lk: &str) -> bool {
         use crate::schema::videos::dsl::*;
         let results = videos.filter(link.eq(lk)).load::<Videos>(&mut self.conn).expect("Error loading videos");
