@@ -41,12 +41,7 @@ async fn main() {
                 let fetcher =
                     YoutubeFetcher::new(&config.youtube.api_key, &user_id, config.youtube.count);
                 match fetcher.get_user_avatar().await {
-                    Ok(url) => {
-                        if let Err(e) = db_conn.add_avatar(user_id, &url) {
-                            eprintln!("Failed to add avatar URL to database: {}", e);
-                        }
-                        url
-                    }
+                    Ok(url) => url,
                     Err(e) => {
                         eprintln!("Failed to get avatar URL: {}", e);
                         continue; // Use continue to skip this iteration if we can't get the channel ID.
