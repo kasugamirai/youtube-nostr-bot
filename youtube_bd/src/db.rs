@@ -32,7 +32,7 @@ impl DbConnection {
             .set(avatar.eq(av))
             .execute(&mut self.conn)
             .map_err(|err| {
-                eprintln!("Error adding avatar: {}", err);
+                log::error!("Error adding avatar: {}", err);
                 err
             })
             .map(|_| ())
@@ -98,7 +98,7 @@ impl DbConnection {
             .values(&new_user)
             .execute(&mut self.conn)
             .map_err(|err| {
-                eprintln!("Error adding user: {}", err);
+                log::error!("Error adding user: {}", err);
                 err
             })
             .map(|_| ())
@@ -140,7 +140,7 @@ impl DbConnection {
             .values(&new_video)
             .execute(&mut self.conn)
             .map_err(|err| {
-                eprintln!("Error adding video: {}", err);
+                log::error!("Error adding video: {}", err);
                 err
             })
             .map(|_| ())

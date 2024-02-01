@@ -1,3 +1,4 @@
+use log;
 use nostr_sdk::prelude::*;
 use nostr_wrapper::publish;
 use std::fs::File;
@@ -9,6 +10,8 @@ use youtube_bot::Config;
 
 #[tokio::main]
 async fn main() {
+    env_logger::init();
+
     let file = File::open("./conf/test/config.yaml").expect("Failed to open config file");
 
     let reader = BufReader::new(file);
@@ -21,13 +24,13 @@ async fn main() {
         let channel_id = match db_conn.query_channel_id(user_id) {
             Some(id) => id,
             None => {
-                print!("Channel ID not found in database. Fetching...");
+                log::info!("Channel ID not found in database. Fetching...");
                 let fetcher =
                     YoutubeFetcher::new(&config.youtube.api_key, &user_id, config.youtube.count);
                 match fetcher.get_channel_id().await {
                     Ok(id) => id,
                     Err(e) => {
-                        eprintln!("Failed to get channel ID: {}", e);
+                        log::error!("Failed to get channel ID: {}", e);
                         continue; // Use continue to skip this iteration if we can't get the channel ID.
                     }
                 }
@@ -37,13 +40,13 @@ async fn main() {
         let avatar_url = match db_conn.avatar_exists(user_id) {
             Some(url) => url,
             None => {
-                print!("Avatar URL not found in database. Fetching...");
+                log::info!("Avatar URL not found in database. Fetching...");
                 let fetcher =
                     YoutubeFetcher::new(&config.youtube.api_key, &user_id, config.youtube.count);
                 match fetcher.get_user_avatar().await {
                     Ok(url) => url,
                     Err(e) => {
-                        eprintln!("Failed to get avatar URL: {}", e);
+                        log::error!("Failed to get avatar URL: {}", e);
                         continue; // Use continue to skip this iteration if we can't get the channel ID.
                     }
                 }
@@ -51,18 +54,20 @@ async fn main() {
         };
 
         let url = format!("https://rsshub.app/youtube/channel/{}", channel_id);
-        println!("Channel ID: {}", channel_id);
+        log::info!("Channel ID: {}", channel_id);
         let fetcher = RssFetcher::new(&url);
         let mut db_conn = DbConnection::new();
         match fetcher.fetch().await {
             Ok(videos) => {
                 for video in videos {
-                    println!(
+                    log::info!(
                         "Title: {}, Link: {}, Author: {}",
-                        video.title, video.link, video.author_name
+                        video.title,
+                        video.link,
+                        video.author_name
                     );
                     if db_conn.video_exists(&video.link) {
-                        println!("Video already exists in database");
+                        log::info!("Video already exists in database");
                         continue;
                     }
 
@@ -72,18 +77,18 @@ async fn main() {
                         let pk: String = match my_keys.public_key().to_bech32() {
                             Ok(pk) => pk,
                             Err(e) => {
-                                eprintln!("Failed to convert public key to bech32: {}", e);
+                                log::error!("Failed to convert public key to bech32: {}", e);
                                 continue;
                             }
                         };
 
                         let prk: String = match my_keys.secret_key() {
                             Ok(secret_key) => secret_key.to_bech32().unwrap_or_else(|_| {
-                                eprintln!("Failed to convert secret key to Bech32 format.");
+                                log::error!("Failed to convert secret key to Bech32 format.");
                                 String::new()
                             }),
                             Err(e) => {
-                                eprintln!("Failed to get secret key: {}", e);
+                                log::error!("Failed to get secret key: {}", e);
                                 String::new()
                             }
                         };
@@ -96,7 +101,7 @@ async fn main() {
                             user_id.clone(),
                             channel_id.clone(),
                         ) {
-                            eprintln!("Failed to add user: {}", e);
+                            log::error!("Failed to add user: {}", e);
                         }
                     }
 
@@ -104,7 +109,7 @@ async fn main() {
                     let user_private_key_str: String = match user_private_key_result {
                         Some(key) => key,
                         None => {
-                            eprintln!("Failed to get user private key");
+                            log::error!("Failed to get user private key");
                             return;
                         }
                     };
@@ -112,7 +117,7 @@ async fn main() {
                     let user_key: Keys = match Keys::from_sk_str(&user_private_key_str) {
                         Ok(keys) => keys,
                         Err(e) => {
-                            eprintln!("Failed to create Keys from private key: {}", e);
+                            log::error!("Failed to create Keys from private key: {}", e);
                             continue;
                         }
                     };
@@ -124,7 +129,7 @@ async fn main() {
                         video.link.clone(),
                         false,
                     ) {
-                        eprintln!("Failed to add video: {}", e);
+                        log::error!("Failed to add video: {}", e);
                     }
 
                     let _ = publish::publish_text_note(
@@ -134,10 +139,10 @@ async fn main() {
                         &format!("{}{}", &video.title, &video.link),
                     )
                     .await;
-                    println!("Published video: {}", &video.author_name);
+                    log::info!("Published video: {}", &video.author_name);
                 }
             }
-            Err(e) => eprintln!("Failed to fetch RSS feed: {}", e),
+            Err(e) => log::error!("Failed to fetch RSS feed: {}", e),
         }
     }
 }

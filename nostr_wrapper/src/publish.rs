@@ -15,7 +15,7 @@ pub async fn publish_text_note(
     let config: Config = serde_yaml::from_reader(reader).expect("Failed to read config");
     // show keys
     let bech32_pubkey: String = my_keys.public_key().to_bech32()?;
-    println!("Bech32 PubKey: {}", bech32_pubkey);
+    log::info!("Bech32 PubKey: {}", bech32_pubkey);
 
     // create client
     let client = Client::new(&my_keys);
@@ -44,7 +44,7 @@ pub async fn publish_text_note(
     // disconnect
     match client.disconnect().await {
         Ok(_) => (),
-        Err(e) => eprintln!("Failed to disconnect: {}", e),
+        Err(e) => log::error!("Failed to disconnect: {}", e),
     }
     Ok(())
 }

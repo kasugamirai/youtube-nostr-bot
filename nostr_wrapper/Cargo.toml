@@ -11,3 +11,4 @@ tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0.195", features = ["derive"] }
 serde_yaml = "0.9.31"
 sonic-rs = "0.3"
+log = "0.4"

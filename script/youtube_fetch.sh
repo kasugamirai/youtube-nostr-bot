@@ -1,4 +1,5 @@
 #!/bin/bash
+export RUST_LOG=info
 BIN_PATH="./rss_youtube_api"
 
 while true; do
