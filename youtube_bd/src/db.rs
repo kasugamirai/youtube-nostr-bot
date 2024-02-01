@@ -25,6 +25,19 @@ impl DbConnection {
         }
     }
 
+    pub fn add_avatar(&mut self, ch: &str, av: &str) -> Result<(), Error> {
+        use crate::schema::youtube_users::dsl::*;
+
+        diesel::update(youtube_users.filter(channel.eq(ch)))
+            .set(avatar.eq(av))
+            .execute(&mut self.conn)
+            .map_err(|err| {
+                eprintln!("Error adding avatar: {}", err);
+                err
+            })
+            .map(|_| ())
+    }
+
     pub fn query_channel_id(&mut self, ch: &str) -> Option<String> {
         use crate::schema::youtube_users::dsl::*;
         let results = youtube_users
