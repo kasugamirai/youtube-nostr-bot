@@ -1,6 +1,5 @@
 use diesel::prelude::*;
-use sonic_rs::{Deserialize, Serialize}; 
-
+use sonic_rs::{Deserialize, Serialize};
 
 #[derive(Queryable, Selectable)]
 #[diesel(table_name = crate::schema::videos)]

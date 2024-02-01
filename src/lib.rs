@@ -1,7 +1,6 @@
 pub mod youtube;
 use sonic_rs::Deserialize;
 
-
 #[derive(Debug, Deserialize)]
 pub struct Config {
     pub youtube: YoutubeConfig,

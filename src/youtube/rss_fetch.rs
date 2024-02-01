@@ -11,9 +11,7 @@ pub struct VideoInfo {
     pub author_name: String,
 }
 
-
 impl RssFetcher {
-
     pub fn new(url: &str) -> RssFetcher {
         RssFetcher {
             url: url.to_string(),
@@ -24,15 +22,16 @@ impl RssFetcher {
         let content = reqwest::get(&self.url).await?.text().await?;
         let channel = content.parse::<rss::Channel>()?;
 
-        let videos = channel.items().iter().map(|item| {
-            VideoInfo {
+        let videos = channel
+            .items()
+            .iter()
+            .map(|item| VideoInfo {
                 title: item.title().unwrap_or_default().to_string(),
                 link: item.link().unwrap_or_default().to_string(),
                 author_name: item.author().unwrap_or_default().to_string(),
-            }
-        }).collect();
+            })
+            .collect();
 
         Ok(videos)
     }
-
 }

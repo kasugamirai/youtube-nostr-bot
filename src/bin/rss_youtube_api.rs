@@ -1,10 +1,10 @@
-use youtube_bot::youtube::rss_fetch::RssFetcher;
-use youtube_bot::youtube::youtube_fetch::YoutubeFetcher;
-use nostr_wrapper::publish;
-use youtube_bd::db::DbConnection;
 use nostr_sdk::prelude::*;
+use nostr_wrapper::publish;
 use std::fs::File;
 use std::io::BufReader;
+use youtube_bd::db::DbConnection;
+use youtube_bot::youtube::rss_fetch::RssFetcher;
+use youtube_bot::youtube::youtube_fetch::YoutubeFetcher;
 use youtube_bot::Config;
 
 #[tokio::main]
@@ -18,12 +18,12 @@ async fn main() {
     let mut db_conn = DbConnection::new();
 
     for user_id in &config.youtube.user_id {
-
         let channel_id = match db_conn.query_channel_id(user_id) {
             Some(id) => id,
             None => {
                 print!("Channel ID not found in database. Fetching...");
-                let fetcher = YoutubeFetcher::new(&config.youtube.api_key, &user_id, config.youtube.count);
+                let fetcher =
+                    YoutubeFetcher::new(&config.youtube.api_key, &user_id, config.youtube.count);
                 match fetcher.get_channel_id().await {
                     Ok(id) => id,
                     Err(e) => {
@@ -33,13 +33,13 @@ async fn main() {
                 }
             }
         };
-        
-        
+
         let avatar_url = match db_conn.avatar_exists(user_id) {
             Some(url) => url,
             None => {
                 print!("Avatar URL not found in database. Fetching...");
-                let fetcher = YoutubeFetcher::new(&config.youtube.api_key, &user_id, config.youtube.count);
+                let fetcher =
+                    YoutubeFetcher::new(&config.youtube.api_key, &user_id, config.youtube.count);
                 match fetcher.get_user_avatar().await {
                     Ok(url) => url,
                     Err(e) => {
@@ -49,7 +49,7 @@ async fn main() {
                 }
             }
         };
-            
+
         let url = format!("https://rsshub.app/youtube/channel/{}", channel_id);
         println!("Channel ID: {}", channel_id);
         let fetcher = RssFetcher::new(&url);
@@ -57,7 +57,10 @@ async fn main() {
         match fetcher.fetch().await {
             Ok(videos) => {
                 for video in videos {
-                    println!("Title: {}, Link: {}, Author: {}", video.title, video.link, video.author_name);
+                    println!(
+                        "Title: {}, Link: {}, Author: {}",
+                        video.title, video.link, video.author_name
+                    );
                     if db_conn.video_exists(&video.link) {
                         println!("Video already exists in database");
                         continue;
@@ -77,19 +80,26 @@ async fn main() {
                         let prk: String = match my_keys.secret_key() {
                             Ok(secret_key) => secret_key.to_bech32().unwrap_or_else(|_| {
                                 eprintln!("Failed to convert secret key to Bech32 format.");
-                                String::new() 
+                                String::new()
                             }),
                             Err(e) => {
                                 eprintln!("Failed to get secret key: {}", e);
-                                String::new() 
+                                String::new()
                             }
                         };
-                        
-                        if let Err(e) = db_conn.add_user(video.author_name.clone(), avatar_url.clone(), pk, prk, user_id.clone(), channel_id.clone()) {
+
+                        if let Err(e) = db_conn.add_user(
+                            video.author_name.clone(),
+                            avatar_url.clone(),
+                            pk,
+                            prk,
+                            user_id.clone(),
+                            channel_id.clone(),
+                        ) {
                             eprintln!("Failed to add user: {}", e);
-                        }                
+                        }
                     }
-                    
+
                     let user_private_key_result = db_conn.find_user_private_key(&user_id);
                     let user_private_key_str: String = match user_private_key_result {
                         Some(key) => key,
@@ -107,13 +117,24 @@ async fn main() {
                         }
                     };
 
-                    if let Err(e) = db_conn.add_video(video.author_name.clone(),user_id.clone(), video.title.clone(), video.link.clone(), false) {
+                    if let Err(e) = db_conn.add_video(
+                        video.author_name.clone(),
+                        user_id.clone(),
+                        video.title.clone(),
+                        video.link.clone(),
+                        false,
+                    ) {
                         eprintln!("Failed to add video: {}", e);
                     }
 
-                    let _ = publish::publish_text_note(user_key,&video.author_name.clone(), &avatar_url, &format!("{}{}", &video.title, &video.link)).await;
+                    let _ = publish::publish_text_note(
+                        user_key,
+                        &video.author_name.clone(),
+                        &avatar_url,
+                        &format!("{}{}", &video.title, &video.link),
+                    )
+                    .await;
                     println!("Published video: {}", &video.author_name);
-
                 }
             }
             Err(e) => eprintln!("Failed to fetch RSS feed: {}", e),

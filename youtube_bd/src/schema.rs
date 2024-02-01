@@ -26,7 +26,4 @@ diesel::table! {
 
 diesel::joinable!(videos -> youtube_users (userid));
 
-diesel::allow_tables_to_appear_in_same_query!(
-    videos,
-    youtube_users,
-);
+diesel::allow_tables_to_appear_in_same_query!(videos, youtube_users,);

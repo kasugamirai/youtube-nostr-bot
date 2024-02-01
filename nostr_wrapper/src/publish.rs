@@ -1,11 +1,15 @@
+use crate::Config;
 use nostr_sdk::prelude::*;
+use serde_yaml::Error;
 use std::fs::File;
 use std::io::BufReader;
-use serde_yaml::Error;
-use crate::Config;
 
-
-pub async fn publish_text_note(my_keys:Keys,username: &str, avatar: &str,message: &str) -> Result<()> {
+pub async fn publish_text_note(
+    my_keys: Keys,
+    username: &str,
+    avatar: &str,
+    message: &str,
+) -> Result<()> {
     let file = File::open("./conf/test/config.yaml").expect("Failed to open config file");
     let reader = BufReader::new(file);
     let config: Config = serde_yaml::from_reader(reader).expect("Failed to read config");
@@ -23,18 +27,17 @@ pub async fn publish_text_note(my_keys:Keys,username: &str, avatar: &str,message
     client.connect().await;
 
     let metadata = Metadata::new()
-    .name("username")
-    .display_name(username)
-    .about("Description")
-    .picture(Url::parse(avatar)?)
-    .banner(Url::parse(avatar)?)
-    .nip05("username@example.com")
-    .lud16("yuki@getalby.com")
-    .custom_field("custom_field", "my value");
+        .name("username")
+        .display_name(username)
+        .about("Description")
+        .picture(Url::parse(avatar)?)
+        .banner(Url::parse(avatar)?)
+        .nip05("username@example.com")
+        .lud16("yuki@getalby.com")
+        .custom_field("custom_field", "my value");
 
     // Update metadata
     client.set_metadata(&metadata).await?;
-
 
     // post a text note
     client.publish_text_note(message, []).await?;
