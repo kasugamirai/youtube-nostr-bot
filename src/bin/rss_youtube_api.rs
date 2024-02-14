@@ -133,7 +133,7 @@ async fn main() {
                     }
 
                     let _ = publish::publish_text_note(
-                        user_key,
+                        &user_key,
                         &video.author_name.clone(),
                         &avatar_url,
                         &format!("{}{}", &video.title, &video.link),

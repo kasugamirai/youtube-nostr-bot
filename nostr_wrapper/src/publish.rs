@@ -5,7 +5,7 @@ use std::fs::File;
 use std::io::BufReader;
 
 pub async fn publish_text_note(
-    my_keys: Keys,
+    my_keys: &Keys,
     username: &str,
     avatar: &str,
     message: &str,
@@ -18,7 +18,7 @@ pub async fn publish_text_note(
     log::info!("Bech32 PubKey: {}", bech32_pubkey);
 
     // create client
-    let client = Client::new(&my_keys);
+    let client = Client::new(my_keys);
 
     // add relays
     client.add_relays(config.nostr.relays).await?;
@@ -27,7 +27,7 @@ pub async fn publish_text_note(
     client.connect().await;
 
     let metadata = Metadata::new()
-        .name("username")
+        .name(username)
         .display_name(username)
         .about("Description")
         .picture(Url::parse(avatar)?)
