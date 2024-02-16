@@ -1,6 +1,5 @@
 use crate::Config;
 use nostr_sdk::prelude::*;
-use serde_yaml::Error;
 use std::fs::File;
 use std::io::BufReader;
 

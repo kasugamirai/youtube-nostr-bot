@@ -6,8 +6,6 @@ use std::io::BufReader;
 
 pub struct DbConnection {
     conn: PgConnection,
-    videos: Vec<NewVideos>,
-    youtube_users: Vec<NewYoutubeUser>,
 }
 
 impl DbConnection {
@@ -18,11 +16,7 @@ impl DbConnection {
         let conn = PgConnection::establish(&config.dsn)
             .expect(&format!("Error connecting to {}", config.dsn));
 
-        DbConnection {
-            conn: conn,
-            videos: Vec::new(),
-            youtube_users: Vec::new(),
-        }
+        DbConnection { conn: conn }
     }
 
     pub fn add_avatar(&mut self, ch: &str, av: &str) -> Result<(), Error> {
