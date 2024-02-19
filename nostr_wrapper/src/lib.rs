@@ -1,12 +1,13 @@
-pub mod publish;
+mod publish;
+pub use publish::publish_text_note;
 use sonic_rs::Deserialize;
 
 #[derive(Debug, Deserialize)]
-pub struct Config {
-    pub nostr: Nostr,
+struct Config {
+    nostr: Nostr,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct Nostr {
-    pub relays: Vec<String>,
+struct Nostr {
+    relays: Vec<String>,
 }

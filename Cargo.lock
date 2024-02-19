@@ -415,6 +415,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "data"
+version = "0.1.0"
+dependencies = [
+ "diesel",
+ "dotenvy",
+ "log",
+ "serde",
+ "serde_yaml 0.8.26",
+ "sonic-rs",
+]
+
+[[package]]
 name = "data-encoding"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2374,21 +2386,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "youtube_bd"
-version = "0.1.0"
-dependencies = [
- "diesel",
- "dotenvy",
- "log",
- "serde",
- "serde_yaml 0.8.26",
- "sonic-rs",
-]
-
-[[package]]
 name = "youtube_bot"
 version = "0.1.0"
 dependencies = [
+ "data",
  "dotenv",
  "env_logger",
  "log",
@@ -2401,5 +2402,4 @@ dependencies = [
  "serde_yaml 0.8.26",
  "sonic-rs",
  "tokio",
- "youtube_bd",
 ]

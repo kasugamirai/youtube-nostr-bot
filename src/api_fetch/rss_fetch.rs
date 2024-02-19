@@ -2,7 +2,7 @@ use reqwest;
 use rss;
 
 pub struct RssFetcher {
-    pub url: String,
+    url: String,
 }
 
 pub struct VideoInfo {

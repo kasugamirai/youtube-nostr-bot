@@ -1,11 +1,11 @@
+use data::db::DbConnection;
 use log;
 use nostr_sdk::prelude::*;
-use nostr_wrapper::publish;
+use nostr_wrapper::publish_text_note;
 use std::fs::File;
 use std::io::BufReader;
-use youtube_bd::db::DbConnection;
-use youtube_bot::youtube::rss_fetch::RssFetcher;
-use youtube_bot::youtube::youtube_fetch::YoutubeFetcher;
+use youtube_bot::api_fetch::RssFetcher;
+use youtube_bot::api_fetch::YoutubeFetcher;
 use youtube_bot::Config;
 
 #[tokio::main]
@@ -132,7 +132,7 @@ async fn main() {
                         log::error!("Failed to add video: {}", e);
                     }
 
-                    let _ = publish::publish_text_note(
+                    let _ = publish_text_note(
                         &user_key,
                         &video.author_name.clone(),
                         &avatar_url,

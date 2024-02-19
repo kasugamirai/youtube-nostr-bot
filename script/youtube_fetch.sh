@@ -1,6 +1,6 @@
 #!/bin/bash
 export RUST_LOG=info
-BIN_PATH="./rss_youtube_api"
+BIN_PATH="./bootstrap"
 
 while true; do
     $BIN_PATH &

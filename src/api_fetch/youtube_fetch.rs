@@ -2,9 +2,9 @@ use reqwest;
 use sonic_rs::{JsonContainerTrait, JsonValueTrait, Value};
 
 pub struct YoutubeFetcher {
-    pub api_key: String,
-    pub user_id: String,
-    pub count: u32,
+    api_key: String,
+    user_id: String,
+    count: u32,
 }
 
 pub struct VideoInfo {
