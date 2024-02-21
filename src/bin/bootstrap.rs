@@ -18,12 +18,18 @@ async fn main() {
 
     let config: Config = serde_yaml::from_reader(reader).expect("Failed to read config");
 
-    let mut db_conn = DbConnection::new();
+    let mut db_conn = match DbConnection::new("./conf/test/config.yaml") {
+        Ok(conn) => conn,
+        Err(e) => {
+            log::error!("Failed to create database connection: {}", e);
+            return;
+        }
+    };
 
     for user_id in &config.youtube.user_id {
         let channel_id = match db_conn.query_channel_id(user_id) {
-            Some(id) => id,
-            None => {
+            Ok(Some(id)) => id,
+            Ok(None) => {
                 log::info!("Channel ID not found in database. Fetching...");
                 let fetcher =
                     YoutubeFetcher::new(&config.youtube.api_key, &user_id, config.youtube.count);
@@ -35,11 +41,15 @@ async fn main() {
                     }
                 }
             }
+            Err(e) => {
+                log::error!("Failed to query channel ID: {}", e);
+                continue; // Use continue to skip this iteration if we can't get the channel ID.
+            }
         };
 
         let avatar_url = match db_conn.avatar_exists(user_id) {
-            Some(url) => url,
-            None => {
+            Ok(Some(url)) => url,
+            Ok(None) => {
                 log::info!("Avatar URL not found in database. Fetching...");
                 let fetcher =
                     YoutubeFetcher::new(&config.youtube.api_key, &user_id, config.youtube.count);
@@ -51,12 +61,15 @@ async fn main() {
                     }
                 }
             }
+            Err(e) => {
+                log::error!("Failed to query avatar URL: {}", e);
+                continue; // Use continue to skip this iteration if we can't get the channel ID.
+            }
         };
 
         let url = format!("https://rsshub.app/youtube/channel/{}", channel_id);
         log::info!("Channel ID: {}", channel_id);
         let fetcher = RssFetcher::new(&url);
-        let mut db_conn = DbConnection::new();
         match fetcher.fetch().await {
             Ok(videos) => {
                 for video in videos {
@@ -66,50 +79,68 @@ async fn main() {
                         video.link,
                         video.author_name
                     );
-                    if db_conn.video_exists(&video.link) {
-                        log::info!("Video already exists in database");
-                        continue;
+                    match db_conn.video_exists(&video.link) {
+                        Ok(true) => {
+                            log::info!("Video already exists in database");
+                            continue;
+                        }
+                        Ok(false) => (),
+                        Err(e) => {
+                            log::error!("Failed to check if video exists: {}", e);
+                            continue;
+                        }
                     }
 
-                    if db_conn.channel_exists(&user_id) == false {
-                        // Create a new user
-                        let my_keys: Keys = Keys::generate();
-                        let pk: String = match my_keys.public_key().to_bech32() {
-                            Ok(pk) => pk,
-                            Err(e) => {
-                                log::error!("Failed to convert public key to bech32: {}", e);
-                                continue;
-                            }
-                        };
+                    match db_conn.channel_exists(&user_id) {
+                        Ok(false) => {
+                            // Create a new user
+                            let my_keys: Keys = Keys::generate();
+                            let pk: String = match my_keys.public_key().to_bech32() {
+                                Ok(pk) => pk,
+                                Err(e) => {
+                                    log::error!("Failed to convert public key to bech32: {}", e);
+                                    continue;
+                                }
+                            };
 
-                        let prk: String = match my_keys.secret_key() {
-                            Ok(secret_key) => secret_key.to_bech32().unwrap_or_else(|_| {
-                                log::error!("Failed to convert secret key to Bech32 format.");
-                                String::new()
-                            }),
-                            Err(e) => {
-                                log::error!("Failed to get secret key: {}", e);
-                                String::new()
-                            }
-                        };
+                            let prk: String = match my_keys.secret_key() {
+                                Ok(secret_key) => secret_key.to_bech32().unwrap_or_else(|_| {
+                                    log::error!("Failed to convert secret key to Bech32 format.");
+                                    String::new()
+                                }),
+                                Err(e) => {
+                                    log::error!("Failed to get secret key: {}", e);
+                                    String::new()
+                                }
+                            };
 
-                        if let Err(e) = db_conn.add_user(
-                            video.author_name.clone(),
-                            avatar_url.clone(),
-                            pk,
-                            prk,
-                            user_id.clone(),
-                            channel_id.clone(),
-                        ) {
-                            log::error!("Failed to add user: {}", e);
+                            if let Err(e) = db_conn.add_user(
+                                video.author_name.clone(),
+                                avatar_url.clone(),
+                                pk,
+                                prk,
+                                user_id.clone(),
+                                channel_id.clone(),
+                            ) {
+                                log::error!("Failed to add user: {}", e);
+                            }
+                        }
+                        Ok(true) => (),
+                        Err(e) => {
+                            log::error!("Failed to check if user exists: {}", e);
+                            continue;
                         }
                     }
 
                     let user_private_key_result = db_conn.find_user_private_key(&user_id);
                     let user_private_key_str: String = match user_private_key_result {
-                        Some(key) => key,
-                        None => {
+                        Ok(Some(key)) => key,
+                        Ok(None) => {
                             log::error!("Failed to get user private key");
+                            return;
+                        }
+                        Err(e) => {
+                            log::error!("Failed to get user private key: {}", e);
                             return;
                         }
                     };

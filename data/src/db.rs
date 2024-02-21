@@ -9,14 +9,20 @@ pub struct DbConnection {
 }
 
 impl DbConnection {
-    pub fn new() -> DbConnection {
-        let file = File::open("./conf/test/config.yaml").expect("Failed to open config file");
+    pub fn new(config_path: &str) -> Result<DbConnection, Box<dyn std::error::Error>> {
+        let file = File::open(config_path)?;
         let reader = BufReader::new(file);
-        let config: Config = serde_yaml::from_reader(reader).expect("Failed to read config");
-        let conn = PgConnection::establish(&config.dsn)
-            .expect(&format!("Error connecting to {}", config.dsn));
+        let config: Config = serde_yaml::from_reader(reader)?;
+        let conn = PgConnection::establish(&config.dsn)?;
 
-        DbConnection { conn: conn }
+        Ok(DbConnection { conn })
+    }
+
+    fn load_users(&mut self, ch: &str) -> Result<Vec<YoutubeUser>, Error> {
+        use crate::schema::youtube_users::dsl::*;
+        youtube_users
+            .filter(channel.eq(ch))
+            .load::<YoutubeUser>(&mut self.conn)
     }
 
     pub fn add_avatar(&mut self, ch: &str, av: &str) -> Result<(), Error> {
@@ -32,40 +38,25 @@ impl DbConnection {
             .map(|_| ())
     }
 
-    pub fn query_channel_id(&mut self, ch: &str) -> Option<String> {
-        use crate::schema::youtube_users::dsl::*;
-        let results = youtube_users
-            .filter(channel.eq(ch))
-            .load::<YoutubeUser>(&mut self.conn)
-            .expect("Error loading users");
-        results.first().map(|user| user.channel_id.to_string())
+    pub fn query_channel_id(&mut self, ch: &str) -> Result<Option<String>, Error> {
+        let results = self.load_users(ch)?;
+        Ok(results.first().map(|user| user.channel_id.to_string()))
     }
 
-    pub fn avatar_exists(&mut self, ch: &str) -> Option<String> {
-        use crate::schema::youtube_users::dsl::*;
-        let results = youtube_users
-            .filter(channel.eq(ch))
-            .load::<YoutubeUser>(&mut self.conn)
-            .expect("Error loading users");
-        results.first().and_then(|user| user.avatar.clone())
+    pub fn avatar_exists(&mut self, ch: &str) -> Result<Option<String>, Error> {
+        let results = self.load_users(ch)?;
+        Ok(results.first().and_then(|user| user.avatar.clone()))
     }
 
-    pub fn video_exists(&mut self, lk: &str) -> bool {
+    pub fn video_exists(&mut self, lk: &str) -> Result<bool, Error> {
         use crate::schema::videos::dsl::*;
-        let results = videos
-            .filter(link.eq(lk))
-            .load::<Videos>(&mut self.conn)
-            .expect("Error loading videos");
-        results.len() > 0
+        let results = videos.filter(link.eq(lk)).load::<Videos>(&mut self.conn)?;
+        Ok(results.len() > 0)
     }
 
-    pub fn channel_exists(&mut self, ch: &str) -> bool {
-        use crate::schema::youtube_users::dsl::*;
-        let results = youtube_users
-            .filter(channel.eq(ch))
-            .load::<YoutubeUser>(&mut self.conn)
-            .expect("Error loading users");
-        !results.is_empty()
+    pub fn channel_exists(&mut self, ch: &str) -> Result<bool, Error> {
+        let results = self.load_users(ch)?;
+        Ok(!results.is_empty())
     }
 
     pub fn add_user(
@@ -98,13 +89,9 @@ impl DbConnection {
             .map(|_| ())
     }
 
-    pub fn query_user_id(&mut self, ch: &str) -> Option<i32> {
-        use crate::schema::youtube_users::dsl::*;
-        let results = youtube_users
-            .filter(channel.eq(ch))
-            .load::<YoutubeUser>(&mut self.conn)
-            .expect("Error loading users");
-        results.first().map(|user| user.id)
+    pub fn query_user_id(&mut self, ch: &str) -> Result<Option<i32>, Error> {
+        let results = self.load_users(ch)?;
+        Ok(results.first().map(|user| user.id))
     }
 
     pub fn add_video(
@@ -118,7 +105,7 @@ impl DbConnection {
         use crate::schema::videos::dsl::*;
 
         let u = self
-            .query_user_id(&ch)
+            .query_user_id(&ch)?
             .expect("User should exist at this point");
 
         let new_video = NewVideos {
@@ -140,21 +127,13 @@ impl DbConnection {
             .map(|_| ())
     }
 
-    pub fn find_user_private_key(&mut self, ch: &str) -> Option<String> {
-        use crate::schema::youtube_users::dsl::*;
-        let results = youtube_users
-            .filter(channel.eq(ch))
-            .load::<YoutubeUser>(&mut self.conn)
-            .expect("Error loading users");
-        results.first().map(|user| user.privatekey.to_string())
+    pub fn find_user_private_key(&mut self, ch: &str) -> Result<Option<String>, Error> {
+        let results = self.load_users(ch)?;
+        Ok(results.first().map(|user| user.privatekey.to_string()))
     }
 
-    pub fn find_user_public_key(&mut self, ch: &str) -> Option<String> {
-        use crate::schema::youtube_users::dsl::*;
-        let results = youtube_users
-            .filter(channel.eq(ch))
-            .load::<YoutubeUser>(&mut self.conn)
-            .expect("Error loading users");
-        results.first().map(|user| user.publickey.to_string())
+    pub fn find_user_public_key(&mut self, ch: &str) -> Result<Option<String>, Error> {
+        let results = self.load_users(ch)?;
+        Ok(results.first().map(|user| user.publickey.to_string()))
     }
 }
