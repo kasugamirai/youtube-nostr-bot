@@ -25,8 +25,6 @@ async fn main() {
         }
     };
 
-    db_conn.run_migrations().expect("Failed to run migrations");
-
     for user_id in &config.youtube.user_id {
         let channel_id = match db_conn.query_channel_id(user_id) {
             Ok(Some(id)) => id,
