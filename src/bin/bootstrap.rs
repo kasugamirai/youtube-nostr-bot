@@ -163,16 +163,18 @@ async fn main() {
                     ) {
                         log::error!("Failed to add video: {}", e);
                     }
-
-                    let nostr_client =
-                        NotePublisher::new(&user_key, "./conf/test/config.yaml").await?;
+                    let nostr_client = NotePublisher::new(&user_key, "./conf/test/config.yaml")
+                        .await
+                        .expect("Failed to create NotePublisher");
                     nostr_client.connect().await;
                     nostr_client
                         .set_metadata(&video.author_name, &avatar_url)
-                        .await?;
+                        .await
+                        .expect("Failed to set metadata");
                     nostr_client
                         .publish_text_note(&user_key, &format!("{}{}", &video.title, &video.link))
-                        .await?;
+                        .await
+                        .expect("Failed to publish text note");
                     nostr_client.disconnect().await;
                     log::info!("Published video: {}", &video.author_name);
                 }
