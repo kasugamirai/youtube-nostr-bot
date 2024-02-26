@@ -1,6 +1,3 @@
-use reqwest;
-use rss;
-
 pub struct RssFetcher {
     url: String,
 }

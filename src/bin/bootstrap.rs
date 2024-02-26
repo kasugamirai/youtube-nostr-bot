@@ -1,5 +1,4 @@
 use data::db::DbConnection;
-use log;
 use nostr_sdk::prelude::*;
 use nostr_wrapper::publish_text_note;
 use std::fs::File;
@@ -25,6 +24,8 @@ async fn main() {
             return;
         }
     };
+
+    db_conn.run_migrations().expect("Failed to run migrations");
 
     for user_id in &config.youtube.user_id {
         let channel_id = match db_conn.query_channel_id(user_id) {

@@ -1,4 +1,3 @@
-use reqwest;
 use sonic_rs::{JsonContainerTrait, JsonValueTrait, Value};
 
 pub struct YoutubeFetcher {

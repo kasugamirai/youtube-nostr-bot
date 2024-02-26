@@ -1,8 +1,11 @@
 use crate::models::{Config, NewVideos, NewYoutubeUser, Videos, YoutubeUser};
 use diesel::prelude::*;
 use diesel::result::Error;
+use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use std::fs::File;
 use std::io::BufReader;
+
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("../data/migrations");
 
 pub struct DbConnection {
     conn: PgConnection,
@@ -16,6 +19,12 @@ impl DbConnection {
         let conn = PgConnection::establish(&config.dsn)?;
 
         Ok(DbConnection { conn })
+    }
+    pub fn run_migrations(
+        &mut self,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
+        self.conn.run_pending_migrations(MIGRATIONS)?;
+        Ok(())
     }
 
     fn load_users(&mut self, ch: &str) -> Result<Vec<YoutubeUser>, Error> {
