@@ -1,20 +1,17 @@
-    # use rust:latest as builder
-    FROM --platform=linux/amd64 rust:latest as builder
+# Use an official Rust runtime as a parent image
+FROM rust:1.76
 
-    # set working directory
-    WORKDIR /app
+# Set the working directory in the container to /app
+WORKDIR /app
 
-    # copy source code to working directory
-    COPY . .
+# Copy the current directory contents into the container at /app
+COPY . /app
 
-    # build release binary
-    RUN cargo build --release
+# Build the application
+RUN cargo build --release
 
-    # copy binary to alpine image
-    FROM --platform=linux/amd64 alpine:latest
+# Make port 80 available to the world outside this container
+EXPOSE 80
 
-    # set working directory
-    WORKDIR /app
-
-    # copy binary from builder
-    COPY --from=builder /app/target/release/youtube_bot_run .
+# Run the binary program produced by `cargo build`
+CMD ["/app/target/release/bootstrap"]
