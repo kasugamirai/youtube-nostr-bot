@@ -1,5 +1,5 @@
 mod publish;
-pub use publish::publish_text_note;
+pub use publish::NotePublisher;
 use sonic_rs::Deserialize;
 
 #[derive(Debug, Deserialize)]

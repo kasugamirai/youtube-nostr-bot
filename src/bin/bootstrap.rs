@@ -1,6 +1,6 @@
 use data::db::DbConnection;
 use nostr_sdk::prelude::*;
-use nostr_wrapper::publish_text_note;
+use nostr_wrapper::NotePublisher;
 use std::fs::File;
 use std::io::BufReader;
 use youtube_bot::api_fetch::RssFetcher;
@@ -164,13 +164,16 @@ async fn main() {
                         log::error!("Failed to add video: {}", e);
                     }
 
-                    let _ = publish_text_note(
-                        &user_key,
-                        &video.author_name.clone(),
-                        &avatar_url,
-                        &format!("{}{}", &video.title, &video.link),
-                    )
-                    .await;
+                    let nostr_client =
+                        NotePublisher::new(&user_key, "./conf/test/config.yaml").await?;
+                    nostr_client.connect().await;
+                    nostr_client
+                        .set_metadata(&video.author_name, &avatar_url)
+                        .await?;
+                    nostr_client
+                        .publish_text_note(&user_key, &format!("{}{}", &video.title, &video.link))
+                        .await?;
+                    nostr_client.disconnect().await;
                     log::info!("Published video: {}", &video.author_name);
                 }
             }
