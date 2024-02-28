@@ -1,5 +1,6 @@
 use data::db::DbConnection;
 use nostr_sdk::prelude::*;
+use nostr_wrapper::AsyncNotePublisher;
 use nostr_wrapper::NotePublisher;
 use std::fs::File;
 use std::io::BufReader;

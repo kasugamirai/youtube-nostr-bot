@@ -1,4 +1,5 @@
 use crate::Config;
+use async_trait::async_trait;
 use nostr_sdk::prelude::*;
 use std::error::Error;
 use std::fs::File;
@@ -8,9 +9,32 @@ pub struct NotePublisher {
     client: Client,
 }
 
-impl NotePublisher {
-    // load config and create new NotePublisher
-    pub async fn new(keys: &Keys, config_path: &str) -> Result<Self> {
+#[async_trait]
+pub trait AsyncNotePublisher {
+    async fn new(keys: &Keys, config_path: &str) -> Result<Self>
+    where
+        Self: Sized;
+
+    async fn connect(&self);
+
+    async fn set_metadata(
+        &self,
+        username: &str,
+        avatar: &str,
+    ) -> std::result::Result<(), Box<dyn Error>>;
+
+    async fn publish_text_note(
+        &self,
+        my_keys: &Keys,
+        message: &str,
+    ) -> std::result::Result<(), Box<dyn Error>>;
+
+    async fn disconnect(&self);
+}
+
+#[async_trait]
+impl AsyncNotePublisher for NotePublisher {
+    async fn new(keys: &Keys, config_path: &str) -> Result<Self> {
         let file = File::open(config_path)?;
         let reader = BufReader::new(file);
         let config: Config = serde_yaml::from_reader(reader).expect("Failed to read config");
@@ -23,13 +47,12 @@ impl NotePublisher {
 
         Ok(Self { client })
     }
-    // connect to the network
-    pub async fn connect(&self) {
+
+    async fn connect(&self) {
         self.client.connect().await;
     }
 
-    // update metadata
-    pub async fn set_metadata(
+    async fn set_metadata(
         &self,
         username: &str,
         avatar: &str,
@@ -48,21 +71,19 @@ impl NotePublisher {
         Ok(())
     }
 
-    // post a text note
-    pub async fn publish_text_note(
+    async fn publish_text_note(
         &self,
         my_keys: &Keys,
         message: &str,
     ) -> std::result::Result<(), Box<dyn Error>> {
-        let bech32_pubkey: String = my_keys.public_key().to_bech32()?; // this is moved out of this function in original code.
+        let bech32_pubkey: String = my_keys.public_key().to_bech32()?;
         log::info!("Bech32 PubKey: {}", bech32_pubkey);
 
         self.client.publish_text_note(message, []).await?;
         Ok(())
     }
 
-    // disconnect
-    pub async fn disconnect(&self) {
+    async fn disconnect(&self) {
         match self.client.disconnect().await {
             Ok(_) => (),
             Err(e) => log::error!("Failed to disconnect: {}", e),

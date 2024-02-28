@@ -1167,6 +1167,7 @@ dependencies = [
 name = "nostr_wrapper"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "log",
  "nostr-sdk",
  "serde",
@@ -2474,6 +2475,7 @@ dependencies = [
 name = "youtube_bot"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "data",
  "dotenv",
  "env_logger",

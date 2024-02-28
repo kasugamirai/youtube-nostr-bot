@@ -1,4 +1,5 @@
 mod publish;
+pub use publish::AsyncNotePublisher;
 pub use publish::NotePublisher;
 use sonic_rs::Deserialize;
 
