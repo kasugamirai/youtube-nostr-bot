@@ -12,13 +12,13 @@ pub struct NotePublisher {
 pub enum Error {
     Io(std::io::Error),
     UrlParse(url::ParseError),
-    nip19(nostr_sdk::nips::nip19::Error),
+    Nip19(nostr_sdk::nips::nip19::Error),
     Client(nostr_sdk::client::Error),
 }
 
 impl From<nostr_sdk::nips::nip19::Error> for Error {
     fn from(e: nostr_sdk::nips::nip19::Error) -> Self {
-        Self::nip19(e)
+        Self::Nip19(e)
     }
 }
 
@@ -45,7 +45,7 @@ impl std::fmt::Debug for Error {
         match self {
             Self::Io(e) => write!(f, "Io: {}", e),
             Self::UrlParse(e) => write!(f, "UrlParse: {}", e),
-            Self::nip19(e) => write!(f, "nip19: {}", e),
+            Self::Nip19(e) => write!(f, "nip19: {}", e),
             Self::Client(e) => write!(f, "Client: {}", e),
         }
     }
