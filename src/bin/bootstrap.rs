@@ -1,9 +1,12 @@
 use data::db::DbConnection;
-use nostr_sdk::prelude::*;
+use nostr_sdk::nostr::Keys;
+use nostr_sdk::SecretKey;
+use nostr_sdk::ToBech32;
 use nostr_wrapper::AsyncNotePublisher;
 use nostr_wrapper::NotePublisher;
 use std::fs::File;
 use std::io::BufReader;
+use std::str::FromStr;
 use youtube_bot::api_fetch::RssFetcher;
 use youtube_bot::api_fetch::YoutubeFetcher;
 use youtube_bot::Config;
@@ -145,13 +148,15 @@ async fn main() {
                         }
                     };
 
-                    let user_key: Keys = match Keys::from_sk_str(&user_private_key_str) {
-                        Ok(keys) => keys,
+                    let sk = match SecretKey::from_str(&user_private_key_str) {
+                        Ok(sk) => sk,
                         Err(e) => {
                             log::error!("Failed to create Keys from private key: {}", e);
                             continue;
                         }
                     };
+
+                    let user_key: Keys = Keys::new(sk);
 
                     if let Err(e) = db_conn.add_video(
                         video.author_name.clone(),
