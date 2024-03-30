@@ -42,7 +42,7 @@ async fn main() {
     };
 
     for user_id in &config.youtube.user_id {
-        let channel_id = match db_conn.query_channel_id(user_id) {
+        let channel_id = match db_conn.query_channel_id(user_id).await {
             Ok(Some(id)) => id,
             Ok(None) => {
                 log::info!("Channel ID not found in database. Fetching...");
@@ -62,7 +62,7 @@ async fn main() {
             }
         };
 
-        let avatar_url = match db_conn.avatar_exists(user_id) {
+        let avatar_url = match db_conn.avatar_exists(user_id).await {
             Ok(Some(url)) => url,
             Ok(None) => {
                 log::info!("Avatar URL not found in database. Fetching...");
@@ -94,7 +94,7 @@ async fn main() {
                         video.link,
                         video.author_name
                     );
-                    match db_conn.video_exists(&video.link) {
+                    match db_conn.video_exists(&video.link).await {
                         Ok(true) => {
                             log::info!("Video already exists in database");
                             continue;
@@ -106,7 +106,7 @@ async fn main() {
                         }
                     }
 
-                    match db_conn.channel_exists(&user_id) {
+                    match db_conn.channel_exists(&user_id).await {
                         Ok(false) => {
                             // Create a new user
                             let my_keys: Keys = Keys::generate();
@@ -134,14 +134,17 @@ async fn main() {
                                 }
                             };
 
-                            if let Err(e) = db_conn.add_user(
-                                video.author_name.clone(),
-                                avatar_url.clone(),
-                                pk,
-                                prk,
-                                user_id.clone(),
-                                channel_id.clone(),
-                            ) {
+                            if let Err(e) = db_conn
+                                .add_user(
+                                    video.author_name.clone(),
+                                    avatar_url.clone(),
+                                    pk,
+                                    prk,
+                                    user_id.clone(),
+                                    channel_id.clone(),
+                                )
+                                .await
+                            {
                                 log::error!("Failed to add user: {}", e);
                             }
                         }
@@ -153,7 +156,7 @@ async fn main() {
                     }
 
                     let user_private_key_result = db_conn.find_user_private_key(&user_id);
-                    let user_private_key_str: String = match user_private_key_result {
+                    let user_private_key_str: String = match user_private_key_result.await {
                         Ok(Some(key)) => key,
                         Ok(None) => {
                             log::error!("Failed to get user private key");
@@ -175,13 +178,16 @@ async fn main() {
 
                     let user_key: Keys = Keys::new(sk);
 
-                    if let Err(e) = db_conn.add_video(
-                        video.author_name.clone(),
-                        user_id.clone(),
-                        video.title.clone(),
-                        video.link.clone(),
-                        false,
-                    ) {
+                    if let Err(e) = db_conn
+                        .add_video(
+                            video.author_name.clone(),
+                            user_id.clone(),
+                            video.title.clone(),
+                            video.link.clone(),
+                            false,
+                        )
+                        .await
+                    {
                         log::error!("Failed to add video: {}", e);
                     }
                     let nostr_client =

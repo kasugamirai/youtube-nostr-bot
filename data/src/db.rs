@@ -95,28 +95,28 @@ impl DbConnection {
             .map(|_| ())?)
     }
 
-    pub fn query_channel_id(&mut self, ch: &str) -> Result<Option<String>, Error> {
+    pub async fn query_channel_id(&mut self, ch: &str) -> Result<Option<String>, Error> {
         let results = self.load_users(ch)?;
         Ok(results.first().map(|user| user.channel_id.to_string()))
     }
 
-    pub fn avatar_exists(&mut self, ch: &str) -> Result<Option<String>, Error> {
+    pub async fn avatar_exists(&mut self, ch: &str) -> Result<Option<String>, Error> {
         let results = self.load_users(ch)?;
         Ok(results.first().and_then(|user| user.avatar.clone()))
     }
 
-    pub fn video_exists(&mut self, lk: &str) -> Result<bool, Error> {
+    pub async fn video_exists(&mut self, lk: &str) -> Result<bool, Error> {
         use crate::schema::videos::dsl::*;
         let results = videos.filter(link.eq(lk)).load::<Videos>(&mut self.conn)?;
         Ok(results.len() > 0)
     }
 
-    pub fn channel_exists(&mut self, ch: &str) -> Result<bool, Error> {
+    pub async fn channel_exists(&mut self, ch: &str) -> Result<bool, Error> {
         let results = self.load_users(ch)?;
         Ok(!results.is_empty())
     }
 
-    pub fn add_user(
+    pub async fn add_user(
         &mut self,
         un: String,
         av: String,
@@ -146,12 +146,12 @@ impl DbConnection {
             .map(|_| ())?)
     }
 
-    pub fn query_user_id(&mut self, ch: &str) -> Result<Option<i32>, Error> {
+    pub async fn query_user_id(&mut self, ch: &str) -> Result<Option<i32>, Error> {
         let results = self.load_users(ch)?;
         Ok(results.first().map(|user| user.id))
     }
 
-    pub fn add_video(
+    pub async fn add_video(
         &mut self,
         au: String,
         ch: String,
@@ -162,7 +162,8 @@ impl DbConnection {
         use crate::schema::videos::dsl::*;
 
         let u = self
-            .query_user_id(&ch)?
+            .query_user_id(&ch)
+            .await?
             .expect("User should exist at this point");
 
         let new_video = NewVideos {
@@ -184,12 +185,12 @@ impl DbConnection {
             .map(|_| ())?)
     }
 
-    pub fn find_user_private_key(&mut self, ch: &str) -> Result<Option<String>, Error> {
+    pub async fn find_user_private_key(&mut self, ch: &str) -> Result<Option<String>, Error> {
         let results = self.load_users(ch)?;
         Ok(results.first().map(|user| user.privatekey.to_string()))
     }
 
-    pub fn find_user_public_key(&mut self, ch: &str) -> Result<Option<String>, Error> {
+    pub async fn find_user_public_key(&mut self, ch: &str) -> Result<Option<String>, Error> {
         let results = self.load_users(ch)?;
         Ok(results.first().map(|user| user.publickey.to_string()))
     }
