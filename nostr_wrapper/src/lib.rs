@@ -12,3 +12,5 @@ struct Config {
 struct Nostr {
     relays: Vec<String>,
 }
+
+pub use publish::Error;
