@@ -4,3 +4,4 @@
 .env
 /conf/test/config.yaml
 output
+.DS_Store
