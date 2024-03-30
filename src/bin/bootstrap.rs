@@ -15,11 +15,23 @@ use youtube_bot::Config;
 async fn main() {
     env_logger::init();
 
-    let file = File::open("./conf/test/config.yaml").expect("Failed to open config file");
+    let file = match File::open("./conf/test/config.yaml") {
+        Ok(file) => file,
+        Err(e) => {
+            log::error!("Failed to open config file: {}", e);
+            return;
+        }
+    };
 
     let reader = BufReader::new(file);
 
-    let config: Config = serde_yaml::from_reader(reader).expect("Failed to read config");
+    let config: Config = match serde_yaml::from_reader(reader) {
+        Ok(config) => config,
+        Err(e) => {
+            log::error!("Failed to read config: {}", e);
+            return;
+        }
+    };
 
     let mut db_conn = match DbConnection::new("./conf/test/config.yaml") {
         Ok(conn) => conn,
@@ -40,13 +52,13 @@ async fn main() {
                     Ok(id) => id,
                     Err(e) => {
                         log::error!("Failed to get channel ID: {}", e);
-                        continue; // Use continue to skip this iteration if we can't get the channel ID.
+                        continue;
                     }
                 }
             }
             Err(e) => {
                 log::error!("Failed to query channel ID: {}", e);
-                continue; // Use continue to skip this iteration if we can't get the channel ID.
+                continue;
             }
         };
 
@@ -60,13 +72,13 @@ async fn main() {
                     Ok(url) => url,
                     Err(e) => {
                         log::error!("Failed to get avatar URL: {}", e);
-                        continue; // Use continue to skip this iteration if we can't get the channel ID.
+                        continue;
                     }
                 }
             }
             Err(e) => {
                 log::error!("Failed to query avatar URL: {}", e);
-                continue; // Use continue to skip this iteration if we can't get the channel ID.
+                continue;
             }
         };
 
@@ -107,13 +119,18 @@ async fn main() {
                             };
 
                             let prk: String = match my_keys.secret_key() {
-                                Ok(secret_key) => secret_key.to_bech32().unwrap_or_else(|_| {
-                                    log::error!("Failed to convert secret key to Bech32 format.");
-                                    String::new()
-                                }),
+                                Ok(secret_key) => match secret_key.to_bech32() {
+                                    Ok(bech32) => bech32,
+                                    Err(_) => {
+                                        log::error!(
+                                            "Failed to convert secret key to Bech32 format."
+                                        );
+                                        continue;
+                                    }
+                                },
                                 Err(e) => {
                                     log::error!("Failed to get secret key: {}", e);
-                                    String::new()
+                                    continue;
                                 }
                             };
 
@@ -167,18 +184,29 @@ async fn main() {
                     ) {
                         log::error!("Failed to add video: {}", e);
                     }
-                    let nostr_client = NotePublisher::new(&user_key, "./conf/test/config.yaml")
-                        .await
-                        .expect("Failed to create NotePublisher");
+                    let nostr_client =
+                        match NotePublisher::new(&user_key, "./conf/test/config.yaml").await {
+                            Ok(client) => client,
+                            Err(e) => {
+                                log::error!("Failed to create NotePublisher: {}", e);
+                                continue;
+                            }
+                        };
                     nostr_client.connect().await;
-                    nostr_client
+                    if let Err(e) = nostr_client
                         .set_metadata(&video.author_name, &avatar_url)
                         .await
-                        .expect("Failed to set metadata");
-                    nostr_client
+                    {
+                        log::error!("Failed to set metadata: {}", e);
+                        continue;
+                    }
+                    if let Err(e) = nostr_client
                         .publish_text_note(&user_key, &format!("{}{}", &video.title, &video.link))
                         .await
-                        .expect("Failed to publish text note");
+                    {
+                        log::error!("Failed to publish text note: {}", e);
+                        continue;
+                    }
                     nostr_client.disconnect().await;
                     log::info!("Published video: {}", &video.author_name);
                 }
