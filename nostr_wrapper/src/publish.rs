@@ -1,5 +1,7 @@
 use crate::Config;
 use async_trait::async_trait;
+use core::fmt;
+use nostr_sdk::base64::display;
 use nostr_sdk::Url;
 use nostr_sdk::{Client, Keys, Metadata, ToBech32};
 use std::fs::File;
@@ -9,6 +11,7 @@ pub struct NotePublisher {
     client: Client,
 }
 
+#[derive(Debug)]
 pub enum Error {
     Io(std::io::Error),
     UrlParse(url::ParseError),
@@ -40,7 +43,7 @@ impl From<url::ParseError> for Error {
     }
 }
 
-impl std::fmt::Debug for Error {
+impl fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Io(e) => write!(f, "Io: {}", e),
