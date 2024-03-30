@@ -1,25 +1,73 @@
 use crate::models::{Config, NewVideos, NewYoutubeUser, Videos, YoutubeUser};
-use diesel::prelude::*;
-use diesel::result::Error;
+use diesel::RunQueryDsl;
+use diesel::{Connection, ExpressionMethods, PgConnection, QueryDsl};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use std::fs::File;
 use std::io::BufReader;
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("../data/migrations");
 
+#[derive(Debug)]
+pub enum Error {
+    Diesel(diesel::result::Error),
+    Connection(diesel::ConnectionError),
+    IoError(std::io::Error),
+    SerdeError(serde_yaml::Error),
+}
+
+impl From<diesel::ConnectionError> for Error {
+    fn from(err: diesel::ConnectionError) -> Self {
+        Error::Connection(err)
+    }
+}
+
+impl From<diesel::result::Error> for Error {
+    fn from(err: diesel::result::Error) -> Self {
+        Error::Diesel(err)
+    }
+}
+
+impl From<std::io::Error> for Error {
+    fn from(err: std::io::Error) -> Self {
+        Error::IoError(err)
+    }
+}
+
+impl From<serde_yaml::Error> for Error {
+    fn from(err: serde_yaml::Error) -> Self {
+        Error::SerdeError(err)
+    }
+}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Error::Diesel(err) => write!(f, "Diesel error: {}", err),
+            Error::Connection(err) => write!(f, "Connection error: {}", err),
+            Error::IoError(err) => write!(f, "IO error: {}", err),
+            Error::SerdeError(err) => write!(f, "Serde error: {}", err),
+        }
+    }
+}
+
 pub struct DbConnection {
     conn: PgConnection,
 }
 
-impl DbConnection {
-    pub fn new(config_path: &str) -> Result<DbConnection, Box<dyn std::error::Error>> {
-        let file = File::open(config_path)?;
-        let reader = BufReader::new(file);
-        let config: Config = serde_yaml::from_reader(reader)?;
-        let conn = PgConnection::establish(&config.dsn)?;
+fn load_conf(config_path: &str) -> Result<Config, Error> {
+    let file = File::open(config_path)?;
+    let reader = BufReader::new(file);
+    let conf = serde_yaml::from_reader(reader)?;
+    Ok(conf)
+}
 
+impl DbConnection {
+    pub fn new(dsn: &str) -> Result<DbConnection, Error> {
+        let conf = load_conf(dsn)?;
+        let conn = PgConnection::establish(&conf.dsn)?;
         Ok(DbConnection { conn })
     }
+
     pub fn run_migrations(
         &mut self,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
@@ -29,22 +77,22 @@ impl DbConnection {
 
     fn load_users(&mut self, ch: &str) -> Result<Vec<YoutubeUser>, Error> {
         use crate::schema::youtube_users::dsl::*;
-        youtube_users
+        Ok(youtube_users
             .filter(channel.eq(ch))
-            .load::<YoutubeUser>(&mut self.conn)
+            .load::<YoutubeUser>(&mut self.conn)?)
     }
 
     pub fn add_avatar(&mut self, ch: &str, av: &str) -> Result<(), Error> {
         use crate::schema::youtube_users::dsl::*;
 
-        diesel::update(youtube_users.filter(channel.eq(ch)))
+        Ok(diesel::update(youtube_users.filter(channel.eq(ch)))
             .set(avatar.eq(av))
             .execute(&mut self.conn)
             .map_err(|err| {
                 log::error!("Error adding avatar: {}", err);
                 err
             })
-            .map(|_| ())
+            .map(|_| ())?)
     }
 
     pub fn query_channel_id(&mut self, ch: &str) -> Result<Option<String>, Error> {
@@ -88,14 +136,14 @@ impl DbConnection {
             channel_id: chid,
         };
 
-        diesel::insert_into(youtube_users)
+        Ok(diesel::insert_into(youtube_users)
             .values(&new_user)
             .execute(&mut self.conn)
             .map_err(|err| {
                 log::error!("Error adding user: {}", err);
                 err
             })
-            .map(|_| ())
+            .map(|_| ())?)
     }
 
     pub fn query_user_id(&mut self, ch: &str) -> Result<Option<i32>, Error> {
@@ -126,14 +174,14 @@ impl DbConnection {
             userid: u,
         };
 
-        diesel::insert_into(videos)
+        Ok(diesel::insert_into(videos)
             .values(&new_video)
             .execute(&mut self.conn)
             .map_err(|err| {
                 log::error!("Error adding video: {}", err);
                 err
             })
-            .map(|_| ())
+            .map(|_| ())?)
     }
 
     pub fn find_user_private_key(&mut self, ch: &str) -> Result<Option<String>, Error> {
