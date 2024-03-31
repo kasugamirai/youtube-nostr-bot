@@ -1,8 +1,8 @@
 use sonic_rs::{JsonContainerTrait, JsonValueTrait, Value};
 
-pub struct YoutubeFetcher {
-    api_key: String,
-    user_id: String,
+pub struct YoutubeFetcher<'a> {
+    api_key: &'a str,
+    user_id: &'a str,
     count: u32,
 }
 
@@ -13,11 +13,11 @@ pub struct VideoInfo {
     pub channel_id: String,
 }
 
-impl YoutubeFetcher {
-    pub fn new(api_key: &str, user_id: &str, count: u32) -> YoutubeFetcher {
+impl<'a> YoutubeFetcher<'a> {
+    pub fn new(api_key: &'a str, user_id: &'a str, count: u32) -> YoutubeFetcher<'a> {
         YoutubeFetcher {
-            api_key: api_key.to_string(),
-            user_id: user_id.to_string(),
+            api_key: api_key,
+            user_id: user_id,
             count: count,
         }
     }
