@@ -48,8 +48,3 @@ pub struct NewYoutubeUser {
     pub channel: String,
     pub channel_id: String,
 }
-
-#[derive(Debug, Deserialize)]
-pub struct Config {
-    pub dsn: String,
-}

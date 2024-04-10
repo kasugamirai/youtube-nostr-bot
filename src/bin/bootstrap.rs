@@ -7,9 +7,9 @@ use nostr_wrapper::NotePublisher;
 use std::fs::File;
 use std::io::BufReader;
 use std::str::FromStr;
-use youtube_bot::api_fetch::RssFetcher;
-use youtube_bot::api_fetch::YoutubeFetcher;
 use youtube_bot::Config;
+use youtube_bot::RssFetcher;
+use youtube_bot::YoutubeFetcher;
 
 #[tokio::main]
 async fn main() {

@@ -1,9 +1,7 @@
-use crate::models::{Config, NewVideos, NewYoutubeUser, Videos, YoutubeUser};
+use crate::models::{NewVideos, NewYoutubeUser, Videos, YoutubeUser};
 use diesel::RunQueryDsl;
 use diesel::{Connection, ExpressionMethods, PgConnection, QueryDsl};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
-use std::fs::File;
-use std::io::BufReader;
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("../data/migrations");
 
@@ -54,17 +52,9 @@ pub struct DbConnection {
     conn: PgConnection,
 }
 
-fn load_conf(config_path: &str) -> Result<Config, Error> {
-    let file = File::open(config_path)?;
-    let reader = BufReader::new(file);
-    let conf = serde_yaml::from_reader(reader)?;
-    Ok(conf)
-}
-
 impl DbConnection {
     pub fn new(dsn: &str) -> Result<DbConnection, Error> {
-        let conf = load_conf(dsn)?;
-        let conn = PgConnection::establish(&conf.dsn)?;
+        let conn = PgConnection::establish(&dsn)?;
         Ok(DbConnection { conn })
     }
 
