@@ -1,11 +1,7 @@
-use crate::Config;
-use async_trait::async_trait;
 use core::fmt;
-use nostr_sdk::base64::display;
 use nostr_sdk::Url;
 use nostr_sdk::{Client, Keys, Metadata, ToBech32};
-use std::fs::File;
-use std::io::{BufReader, Result};
+use std::io::Result;
 
 pub struct NotePublisher {
     client: Client,
@@ -53,47 +49,26 @@ impl fmt::Display for Error {
         }
     }
 }
-
-#[async_trait]
-pub trait AsyncNotePublisher {
-    async fn new(keys: &Keys, config_path: &str) -> Result<Self>
-    where
-        Self: Sized;
-
-    async fn connect(&self);
-
-    async fn set_metadata(&self, username: &str, avatar: &str) -> std::result::Result<(), Error>;
-
-    async fn publish_text_note(
-        &self,
-        my_keys: &Keys,
-        message: &str,
-    ) -> std::result::Result<(), Error>;
-
-    async fn disconnect(&self);
-}
-
-#[async_trait]
-impl AsyncNotePublisher for NotePublisher {
-    async fn new(keys: &Keys, config_path: &str) -> Result<Self> {
-        let file = File::open(config_path)?;
-        let reader = BufReader::new(file);
-        let config: Config = serde_yaml::from_reader(reader).expect("Failed to read config");
-
+impl NotePublisher {
+    pub async fn new(keys: &Keys, relays: &Vec<String>) -> Result<Self> {
         let client = Client::new(keys);
         client
-            .add_relays(config.nostr.relays)
+            .add_relays(relays.clone())
             .await
             .expect("Failed to add relays");
 
         Ok(Self { client })
     }
 
-    async fn connect(&self) {
+    pub async fn connect(&self) {
         self.client.connect().await;
     }
 
-    async fn set_metadata(&self, username: &str, avatar: &str) -> std::result::Result<(), Error> {
+    pub async fn set_metadata(
+        &self,
+        username: &str,
+        avatar: &str,
+    ) -> std::result::Result<(), Error> {
         let metadata = Metadata::new()
             .name(username)
             .display_name(username)
@@ -108,7 +83,7 @@ impl AsyncNotePublisher for NotePublisher {
         Ok(())
     }
 
-    async fn publish_text_note(
+    pub async fn publish_text_note(
         &self,
         my_keys: &Keys,
         message: &str,
@@ -120,7 +95,7 @@ impl AsyncNotePublisher for NotePublisher {
         Ok(())
     }
 
-    async fn disconnect(&self) {
+    pub async fn disconnect(&self) {
         match self.client.disconnect().await {
             Ok(_) => (),
             Err(e) => log::error!("Failed to disconnect: {}", e),

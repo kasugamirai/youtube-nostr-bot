@@ -1,4 +1,4 @@
-use data::db::DbConnection;
+use data::DbConnection;
 
 #[tokio::main]
 async fn main() {
