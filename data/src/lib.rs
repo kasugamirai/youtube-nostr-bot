@@ -167,13 +167,9 @@ impl DbConnection {
         ti: &str,
         lk: &str,
         pu: bool,
+        u_id: i32,
     ) -> Result<(), Error> {
         use crate::schema::videos::dsl::*;
-
-        let u = self
-            .query_user_id(&ch)
-            .await?
-            .expect("User should exist at this point");
 
         let new_video = NewVideos {
             author: au.to_string(),
@@ -181,7 +177,7 @@ impl DbConnection {
             title: ti.to_string(),
             link: lk.to_string(),
             published: pu,
-            userid: u,
+            userid: u_id,
         };
 
         Ok(diesel::insert_into(videos)
