@@ -1,6 +1,9 @@
+use chrono::{Duration, Utc};
 use core::fmt;
-use nostr_sdk::Url;
+use nostr_sdk::client::builder;
 use nostr_sdk::{Client, Keys, Metadata, ToBech32};
+use nostr_sdk::{EventBuilder, Url};
+use rand::Rng;
 use std::io::Result;
 
 pub struct NotePublisher {
@@ -90,8 +93,11 @@ impl NotePublisher {
     ) -> std::result::Result<(), Error> {
         let bech32_pubkey: String = my_keys.public_key().to_bech32()?;
         log::info!("Bech32 PubKey: {}", bech32_pubkey);
+        let time = custom_created_at();
 
-        self.client.publish_text_note(message, []).await?;
+        let builder = EventBuilder::text_note(message, []).custom_created_at(time);
+        self.client.send_event_builder(builder).await?;
+
         Ok(())
     }
 
@@ -101,4 +107,19 @@ impl NotePublisher {
             Err(e) => log::error!("Failed to disconnect: {}", e),
         }
     }
+}
+
+pub fn custom_created_at() -> nostr_sdk::Timestamp {
+    let now = Utc::now();
+    let mut rng = rand::thread_rng();
+    let minutes_to_subtract: i64 = rng.gen_range(0..60);
+    let new_time = now - Duration::minutes(minutes_to_subtract);
+
+    // Convert new_time to a Unix timestamp
+    let unix_timestamp: u64 = new_time.timestamp() as u64;
+
+    // Convert unix_timestamp to nostr_sdk::Timestamp
+    let nostr_timestamp = nostr_sdk::Timestamp::from(unix_timestamp);
+
+    nostr_timestamp
 }

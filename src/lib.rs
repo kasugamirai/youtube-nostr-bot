@@ -140,12 +140,15 @@ impl App {
         }
     }
 
-    pub async fn get_contents(&mut self, channel_id: String) -> Result<Vec<String>, Error> {
+    pub async fn get_contents(
+        &mut self,
+        channel_id: &str,
+        channel_name: &str,
+    ) -> Result<Vec<String>, Error> {
         let url = format!("https://rsshub.app/youtube/channel/{}", channel_id);
         let rss = RssFetcher::new(&url);
         let videos = rss.fetch().await?;
         let mut ret = Vec::new();
-        let uid = self.db.query_user_id(&channel_id).await?.unwrap();
 
         for video in videos {
             let video_exists = self.db.video_exists(&video.link).await?;
@@ -153,11 +156,10 @@ impl App {
                 self.db
                     .add_video(
                         &video.author_name,
+                        channel_name,
                         &video.title,
                         &video.link,
-                        &video.author_name,
                         false,
-                        uid,
                     )
                     .await?;
             }

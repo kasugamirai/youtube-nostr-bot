@@ -167,9 +167,10 @@ impl DbConnection {
         ti: &str,
         lk: &str,
         pu: bool,
-        u_id: i32,
     ) -> Result<(), Error> {
         use crate::schema::videos::dsl::*;
+
+        let u_id = self.query_user_id(ch).await?.unwrap();
 
         let new_video = NewVideos {
             author: au.to_string(),

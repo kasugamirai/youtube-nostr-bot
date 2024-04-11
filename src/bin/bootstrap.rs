@@ -19,7 +19,7 @@ async fn main() {
             .await
             .expect("Failed to check user");
         let contents = app
-            .get_contents(channel_id)
+            .get_contents(&channel_id, &user)
             .await
             .expect("Failed to get contents");
         for msg in &contents {
