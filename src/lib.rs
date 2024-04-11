@@ -132,7 +132,7 @@ impl App {
                     &avatar_url,
                     &public_key,
                     &private_key,
-                    &channel_id,
+                    &channel_name,
                     &channel_id,
                 )
                 .await?;
@@ -145,6 +145,8 @@ impl App {
         let rss = RssFetcher::new(&url);
         let videos = rss.fetch().await?;
         let mut ret = Vec::new();
+        let uid = self.db.query_user_id(&channel_id).await?.unwrap();
+
         for video in videos {
             let video_exists = self.db.video_exists(&video.link).await?;
             if !video_exists {
@@ -155,6 +157,7 @@ impl App {
                         &video.link,
                         &video.author_name,
                         false,
+                        uid,
                     )
                     .await?;
             }
