@@ -1,10 +1,10 @@
-mod api_fetch;
+mod api;
 mod conf;
 
 use std::str::FromStr;
 
-pub use api_fetch::RssFetcher;
-pub use api_fetch::YoutubeFetcher;
+pub use api::RssFetcher;
+pub use api::YoutubeFetcher;
 pub use conf::load_conf;
 pub use conf::Config;
 use data::DbConnection;
@@ -21,8 +21,8 @@ pub enum Error {
     NIP19(nostr_sdk::nips::nip19::Error),
     Nostr(nostr_sdk::key::Error),
     NostrWrapper(nostr_wrapper::Error),
-    Rss(api_fetch::RssError),
-    Youtube(api_fetch::YoutubeError),
+    Rss(api::RssError),
+    Youtube(api::YoutubeError),
     IO(std::io::Error),
     Custom(String),
 }
@@ -39,14 +39,14 @@ impl From<nostr_wrapper::Error> for Error {
     }
 }
 
-impl From<api_fetch::RssError> for Error {
-    fn from(e: api_fetch::RssError) -> Self {
+impl From<api::RssError> for Error {
+    fn from(e: api::RssError) -> Self {
         Self::Rss(e)
     }
 }
 
-impl From<api_fetch::YoutubeError> for Error {
-    fn from(e: api_fetch::YoutubeError) -> Self {
+impl From<api::YoutubeError> for Error {
+    fn from(e: api::YoutubeError) -> Self {
         Self::Youtube(e)
     }
 }

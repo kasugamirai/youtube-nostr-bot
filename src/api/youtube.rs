@@ -1,4 +1,3 @@
-use rss::Channel;
 use sonic_rs::{JsonContainerTrait, JsonValueTrait, Value};
 
 pub struct YoutubeFetcher<'a> {
