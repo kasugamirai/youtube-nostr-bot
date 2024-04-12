@@ -1,5 +1,6 @@
 mod api;
 mod conf;
+mod nostr;
 
 use std::str::FromStr;
 
@@ -8,8 +9,8 @@ pub use api::YoutubeFetcher;
 pub use conf::load_conf;
 pub use conf::Config;
 use data::DbConnection;
+pub use nostr::NotePublisher;
 use nostr_sdk::SecretKey;
-pub use nostr_wrapper::NotePublisher;
 
 use nostr_sdk::Keys;
 use nostr_sdk::ToBech32;
@@ -20,7 +21,7 @@ pub enum Error {
     ConfigError(conf::Error),
     NIP19(nostr_sdk::nips::nip19::Error),
     Nostr(nostr_sdk::key::Error),
-    NostrWrapper(nostr_wrapper::Error),
+    NostrWrapper(nostr::Error),
     Rss(api::RssError),
     Youtube(api::YoutubeError),
     IO(std::io::Error),
@@ -33,8 +34,8 @@ impl From<std::io::Error> for Error {
     }
 }
 
-impl From<nostr_wrapper::Error> for Error {
-    fn from(e: nostr_wrapper::Error) -> Self {
+impl From<nostr::Error> for Error {
+    fn from(e: nostr::Error) -> Self {
         Self::NostrWrapper(e)
     }
 }

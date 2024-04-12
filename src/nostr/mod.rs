@@ -1,6 +1,7 @@
 use chrono::{Duration, Utc};
 use core::fmt;
-use nostr_sdk::client::builder;
+
+use nostr_sdk::types::url;
 use nostr_sdk::{Client, Keys, Metadata, ToBech32};
 use nostr_sdk::{EventBuilder, Url};
 use rand::Rng;
@@ -79,7 +80,7 @@ impl NotePublisher {
             .picture(Url::parse(avatar)?)
             .banner(Url::parse(avatar)?)
             .nip05("username@example.com")
-            .lud16("yuki@getalby.com")
+            .lud16("0")
             .custom_field("custom_field", "value");
 
         self.client.set_metadata(&metadata).await?;
