@@ -134,7 +134,7 @@ impl App {
                     &avatar_url,
                     &public_key,
                     &private_key,
-                    &channel_name,
+                    channel_name,
                     &channel_id,
                 )
                 .await?;
@@ -226,10 +226,7 @@ impl App {
             log::error!("Failed to set metadata: {}", e);
         }
 
-        if let Err(e) = note_publish
-            .publish_text_note(&key, &format!("{}", message))
-            .await
-        {
+        if let Err(e) = note_publish.publish_text_note(&key, message).await {
             log::error!("Failed to publish text note: {}", e);
         }
         note_publish.disconnect().await;

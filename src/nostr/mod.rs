@@ -54,10 +54,10 @@ impl fmt::Display for Error {
     }
 }
 impl NotePublisher {
-    pub async fn new(keys: &Keys, relays: &Vec<String>) -> Result<Self> {
+    pub async fn new(keys: &Keys, relays: &[String]) -> Result<Self> {
         let client = Client::new(keys);
         client
-            .add_relays(relays.clone())
+            .add_relays(relays.to_vec())
             .await
             .expect("Failed to add relays");
 
@@ -120,7 +120,6 @@ pub fn custom_created_at() -> nostr_sdk::Timestamp {
     let unix_timestamp: u64 = new_time.timestamp() as u64;
 
     // Convert unix_timestamp to nostr_sdk::Timestamp
-    let nostr_timestamp = nostr_sdk::Timestamp::from(unix_timestamp);
 
-    nostr_timestamp
+    nostr_sdk::Timestamp::from(unix_timestamp)
 }

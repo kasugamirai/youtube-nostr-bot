@@ -2,7 +2,7 @@ mod models;
 mod schema;
 
 use crate::models::{NewVideos, NewYoutubeUser, Videos, YoutubeUser};
-use diesel::row::NamedRow;
+
 use diesel::RunQueryDsl;
 use diesel::{Connection, ExpressionMethods, PgConnection, QueryDsl};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
