@@ -1,5 +1,6 @@
 mod api;
 mod conf;
+mod gpt;
 mod nostr;
 
 use std::str::FromStr;
