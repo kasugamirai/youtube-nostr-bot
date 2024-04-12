@@ -162,9 +162,9 @@ impl App {
                         false,
                     )
                     .await?;
+                let combined = format!("{}: {}", video.title, video.link);
+                ret.push(combined);
             }
-            let combined = format!("{}: {}", video.title, video.link);
-            ret.push(combined);
         }
         Ok(ret)
     }
