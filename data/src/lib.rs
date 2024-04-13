@@ -58,7 +58,7 @@ pub struct DbConnection {
 
 impl DbConnection {
     pub fn new(dsn: &str) -> Result<DbConnection, Error> {
-        let conn = PgConnection::establish(&dsn)?;
+        let conn = PgConnection::establish(dsn)?;
         Ok(DbConnection { conn })
     }
 

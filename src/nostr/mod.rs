@@ -113,7 +113,7 @@ impl NotePublisher {
 pub fn custom_created_at() -> nostr_sdk::Timestamp {
     let now = Utc::now();
     let mut rng = rand::thread_rng();
-    let minutes_to_subtract: i64 = rng.gen_range(0..180);
+    let minutes_to_subtract: i64 = rng.gen_range(0..30);
     let new_time = now - Duration::minutes(minutes_to_subtract);
 
     // Convert new_time to a Unix timestamp

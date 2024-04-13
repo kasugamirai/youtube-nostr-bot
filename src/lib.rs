@@ -175,7 +175,7 @@ impl App {
         &mut self,
         channel_name: &str,
         message: &str,
-        relays: &Vec<String>,
+        relays: &[String],
     ) -> Result<(), Error> {
         let secret_key = match self.db.find_user_private_key(channel_name).await {
             Ok(Some(key)) => key,

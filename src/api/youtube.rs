@@ -58,9 +58,9 @@ pub struct VideoInfo {
 impl<'a> YoutubeFetcher<'a> {
     pub fn new(api_key: &'a str, channel_name: &'a str, count: u32) -> YoutubeFetcher<'a> {
         YoutubeFetcher {
-            api_key: api_key,
-            channel_name: channel_name,
-            count: count,
+            api_key,
+            channel_name,
+            count,
         }
     }
 
@@ -109,8 +109,8 @@ impl<'a> YoutubeFetcher<'a> {
             }
         };
         Ok(UserInfo {
-            avatar_link: avatar_link,
-            user_name: user_name,
+            avatar_link,
+            user_name,
         })
     }
 
