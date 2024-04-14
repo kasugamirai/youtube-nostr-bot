@@ -94,7 +94,8 @@ impl NotePublisher {
     ) -> std::result::Result<(), Error> {
         let bech32_pubkey: String = my_keys.public_key().to_bech32()?;
         log::info!("Bech32 PubKey: {}", bech32_pubkey);
-        let time = custom_created_at();
+        //let time = custom_created_at();
+        let time = nostr_sdk::Timestamp::now();
 
         let builder = EventBuilder::text_note(message, []).custom_created_at(time);
         self.client.send_event_builder(builder).await?;

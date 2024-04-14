@@ -4,6 +4,8 @@ mod gpt;
 mod nostr;
 
 use std::str::FromStr;
+use std::time::Duration;
+use tokio::time;
 
 pub use api::RssFetcher;
 pub use api::YoutubeFetcher;
@@ -229,6 +231,7 @@ impl App {
         if let Err(e) = note_publish.publish_text_note(&key, message).await {
             log::error!("Failed to publish text note: {}", e);
         }
+        time::sleep(Duration::from_secs(1)).await;
         note_publish.disconnect().await;
 
         Ok(())
