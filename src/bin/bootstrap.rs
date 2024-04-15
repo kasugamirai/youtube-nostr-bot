@@ -1,5 +1,7 @@
+use core::time;
 use log::{error, info};
 use std::collections::HashMap;
+use tokio::time::sleep;
 use youtube_bot::load_conf;
 use youtube_bot::App;
 
@@ -56,6 +58,7 @@ async fn main() {
                             Ok(_) => info!("Successfully published for user {}", user),
                             Err(e) => error!("Failed to publish for user {}: {}", user, e),
                         }
+                        sleep(time::Duration::from_secs(600)).await;
                     }
                 }
             }
