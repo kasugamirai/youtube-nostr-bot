@@ -113,11 +113,10 @@ impl App {
     ) -> Result<String, Error> {
         let user_exists = self.db.user_exists(channel_name).await?;
         if user_exists {
-            let chid = match self.db.query_channel_id(channel_name).await? {
-                Some(id) => id,
-                None => {
-                    return Err(Error::Custom("Channel ID not found".to_string()));
-                }
+            let chid = if let Some(chid) = chid_option {
+                chid
+            } else {
+                return Err(Error::Custom("Channel ID not found".to_string()));
             };
             Ok(chid)
         } else {
