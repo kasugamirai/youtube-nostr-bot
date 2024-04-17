@@ -113,6 +113,7 @@ impl App {
     ) -> Result<String, Error> {
         let user_exists = self.db.user_exists(channel_name).await?;
         if user_exists {
+            let chid_option = self.db.query_channel_id(channel_name).await?;
             let chid = if let Some(chid) = chid_option {
                 chid
             } else {
