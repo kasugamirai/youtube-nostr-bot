@@ -1,11 +1,11 @@
-use crate::Config;
-use async_trait::async_trait;
+use chrono::{Duration, Utc};
 use core::fmt;
-use nostr_sdk::base64::display;
-use nostr_sdk::Url;
+
+use nostr_sdk::types::url;
 use nostr_sdk::{Client, Keys, Metadata, ToBech32};
-use std::fs::File;
-use std::io::{BufReader, Result};
+use nostr_sdk::{EventBuilder, Url};
+use rand::Rng;
+use std::io::Result;
 
 pub struct NotePublisher {
     client: Client,
@@ -53,47 +53,26 @@ impl fmt::Display for Error {
         }
     }
 }
-
-#[async_trait]
-pub trait AsyncNotePublisher {
-    async fn new(keys: &Keys, config_path: &str) -> Result<Self>
-    where
-        Self: Sized;
-
-    async fn connect(&self);
-
-    async fn set_metadata(&self, username: &str, avatar: &str) -> std::result::Result<(), Error>;
-
-    async fn publish_text_note(
-        &self,
-        my_keys: &Keys,
-        message: &str,
-    ) -> std::result::Result<(), Error>;
-
-    async fn disconnect(&self);
-}
-
-#[async_trait]
-impl AsyncNotePublisher for NotePublisher {
-    async fn new(keys: &Keys, config_path: &str) -> Result<Self> {
-        let file = File::open(config_path)?;
-        let reader = BufReader::new(file);
-        let config: Config = serde_yaml::from_reader(reader).expect("Failed to read config");
-
+impl NotePublisher {
+    pub async fn new(keys: &Keys, relays: &[String]) -> Result<Self> {
         let client = Client::new(keys);
         client
-            .add_relays(config.nostr.relays)
+            .add_relays(relays.to_vec())
             .await
             .expect("Failed to add relays");
 
         Ok(Self { client })
     }
 
-    async fn connect(&self) {
+    pub async fn connect(&self) {
         self.client.connect().await;
     }
 
-    async fn set_metadata(&self, username: &str, avatar: &str) -> std::result::Result<(), Error> {
+    pub async fn set_metadata(
+        &self,
+        username: &str,
+        avatar: &str,
+    ) -> std::result::Result<(), Error> {
         let metadata = Metadata::new()
             .name(username)
             .display_name(username)
@@ -101,29 +80,47 @@ impl AsyncNotePublisher for NotePublisher {
             .picture(Url::parse(avatar)?)
             .banner(Url::parse(avatar)?)
             .nip05("username@example.com")
-            .lud16("yuki@getalby.com")
+            .lud16("0")
             .custom_field("custom_field", "value");
 
         self.client.set_metadata(&metadata).await?;
         Ok(())
     }
 
-    async fn publish_text_note(
+    pub async fn publish_text_note(
         &self,
         my_keys: &Keys,
         message: &str,
     ) -> std::result::Result<(), Error> {
         let bech32_pubkey: String = my_keys.public_key().to_bech32()?;
         log::info!("Bech32 PubKey: {}", bech32_pubkey);
+        //let time = custom_created_at();
+        let time = nostr_sdk::Timestamp::now();
 
-        self.client.publish_text_note(message, []).await?;
+        let builder = EventBuilder::text_note(message, []).custom_created_at(time);
+        self.client.send_event_builder(builder).await?;
+
         Ok(())
     }
 
-    async fn disconnect(&self) {
+    pub async fn disconnect(&self) {
         match self.client.disconnect().await {
             Ok(_) => (),
             Err(e) => log::error!("Failed to disconnect: {}", e),
         }
     }
+}
+
+pub fn custom_created_at() -> nostr_sdk::Timestamp {
+    let now = Utc::now();
+    let mut rng = rand::thread_rng();
+    let minutes_to_subtract: i64 = rng.gen_range(0..30);
+    let new_time = now - Duration::minutes(minutes_to_subtract);
+
+    // Convert new_time to a Unix timestamp
+    let unix_timestamp: u64 = new_time.timestamp() as u64;
+
+    // Convert unix_timestamp to nostr_sdk::Timestamp
+
+    nostr_sdk::Timestamp::from(unix_timestamp)
 }
