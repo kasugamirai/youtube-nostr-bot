@@ -49,12 +49,12 @@ async fn main() {
     let mut done = false;
     while !done {
         done = true;
-        for user in users.clone() {
-            if let Some(contents) = user_contents.get_mut(&user) {
+        for user in &users {
+            if let Some(contents) = user_contents.get_mut(user) {
                 if let Some(msg) = contents.pop() {
                     done = false;
-                    if let Some(app) = apps.get_mut(&user) {
-                        match app.publish(&user, &msg, &relays).await {
+                    if let Some(app) = apps.get_mut(user) {
+                        match app.publish(user, &msg, &relays).await {
                             Ok(_) => info!("Successfully published for user {}", user),
                             Err(e) => error!("Failed to publish for user {}: {}", user, e),
                         }
