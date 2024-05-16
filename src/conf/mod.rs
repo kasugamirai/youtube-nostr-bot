@@ -1,3 +1,4 @@
+use sonic_rs::Deserialize;
 use std::fs::File;
 use std::io::BufReader;
 
@@ -25,8 +26,6 @@ impl std::fmt::Display for Error {
         }
     }
 }
-
-use sonic_rs::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
