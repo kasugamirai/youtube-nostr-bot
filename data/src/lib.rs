@@ -102,7 +102,7 @@ impl DbConnection {
     pub async fn video_exists(&mut self, lk: &str) -> Result<bool, Error> {
         use crate::schema::videos::dsl::*;
         let results = videos.filter(link.eq(lk)).load::<Videos>(&mut self.conn)?;
-        Ok(results.len() > 0)
+        Ok(!results.is_empty())
     }
 
     pub async fn channel_exists(&mut self, ch: &str) -> Result<bool, Error> {
